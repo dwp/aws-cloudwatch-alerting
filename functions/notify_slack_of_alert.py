@@ -50,7 +50,7 @@ def config_notification(message, region):
         config_old_state = message['oldEvaluationResult']['complianceType']
     config_new_state = message['newEvaluationResult']['complianceType']
     # We constantly get spammed with restricted-ssh periodically going from NON_COMPLIANT to NOT_APPLICABLE
-    if config_new_state == "NOT_APPLICABLE":
+    if config_new_state == "NOT_APPLICABLE" :
         print("DEBUG: new state NOT_APPLICABLE message - exiting.")
         quit()
     elif config_old_state == "NOT_APPLICABLE" and config_new_state == "COMPLIANT":
