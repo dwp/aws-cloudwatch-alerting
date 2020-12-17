@@ -1,0 +1,33 @@
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# .tfvars files
+*.tfvars
+
+# JetBrains
+.idea
+.idea/*
+*.iml
+
+# CI
+aviator_*
+
+# virtual environments
+venv/
+
+# IDEs
+.vscode/
+
+# Locally generated fiiles
+*.zip
+output.txt
+.tox/
+/**/build/
+/**/dist/
+/**/*.egg-info/
+**/__pycache__/*
+.DS_Store

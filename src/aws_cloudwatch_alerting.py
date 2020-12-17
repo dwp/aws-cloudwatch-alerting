@@ -221,15 +221,6 @@ def config_cloudwatch_event_notification(message, region):
 
                 relationship_value = " due to a related NetworkInterfaces change"
                 value = value + relationship_value
-            # else:
-            # value = value + ".\nChanged properties are ["
-            # for prop in changed_properties:
-            #    value = value + prop + ", "
-            # value = value + "]"
-            # return {
-            #    "fallback": title,
-            #    "fields": [{"title": title, "value": value, "short": False}]
-            # }
 
         value = value + "."
 
@@ -272,7 +263,77 @@ def format_cloudwatch_metric_filters():
     return cloudwatch_metric_filters
 
 
-def config_cloudwatch_alarm_notification(message, region):
+def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel):
+    return (
+        (prowler_slack_channel, config_prowler_cloudwatch_alarm_notification(message, region))
+        if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring"
+        else config_custom_cloudwatch_alarm_notification(message, region)
+    )
+
+
+def config_custom_cloudwatch_alarm_notification(message, region):
+    slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
+    slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
+    environment_name = os.environ["AWS_ENVIRONMENT"]
+
+    alarm_name = message["AlarmName"]
+
+    cw_client = boto3.client('cloudwatch')
+    tags = cw_client.list_tags_for_resource(
+        ResourceARN=message["AlarmArn"]
+    )
+    priority = next((tag["Value"] for tag in tags if tag["Key"] == "severity"), "NOT_SET")
+    notification_type = next((tag["Value"] for tag in tags if tag["Key"] == "notification_type"), "NOT_SET")
+
+    alarm_url = (
+        "https://console.aws.amazon.com/cloudwatch/home?region="
+        + region
+        + "#s=Alarms&alarm="
+        + alarm_name.replace(" ", "%20")
+    )
+
+    colour = "warning"
+    icon = ":warning:"
+    slack_channel = slack_channel_main
+
+    if notification_type.lower() == "information":
+        icon = ":information_source:"
+        colour = "good"
+    elif notification_type.lower() == "error":
+        icon = ":fire:"
+        colour = "danger"
+        if priority.lower() == "critical":
+            slack_channel = slack_channel_critical
+    elif priority.lower() == "high" or priority.lower() == "critical":
+            slack_channel = slack_channel_critical
+
+    title = f"{icon} *{environment_name.upper()}*: \"_{alarm_name}_\" in {region}"
+
+    return (slack_channel, {
+        "color": colour,
+        "fallback": title,
+        "fields": [
+            {
+                "title": "AWS Console link",
+                "value": alarm_url
+            },
+            {
+                "title": "Trigger time",
+                "value": message["StateUpdatedTimestamp"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            },
+            {
+                "title": "Priority",
+                "value": priority
+            },
+            {
+                "title": "Type",
+                "value": notification_type
+            }
+        ],
+    })
+
+
+def config_prowler_cloudwatch_alarm_notification(message, region):
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
     cloudwatch_metric_filters = {
         #'3.1 Unauthorized API calls': '?UnauthorizedOperation ?AccessDenied',
@@ -511,8 +572,10 @@ def notify_slack(message, region):
             )
         elif "AlarmName" in message:
             # this is a CloudWatch Alarm; assume it is from prowler monitoring...
+            (channel, attachment) = config_cloudwatch_alarm_notification(message, region)
+            payload["channel"] = channel
             payload["attachments"].append(
-                config_cloudwatch_alarm_notification(message, region)
+                attachment
             )
         else:
             payload["text"] = "Unidentified notification"
@@ -523,7 +586,7 @@ def notify_slack(message, region):
     urllib.request.urlopen(req, data)
 
 
-def lambda_handler(event, context):
+def handler(event, context):
     # print(event)
 
     # note that, when calling the lambda function via the console 'test' button,
@@ -541,3 +604,14 @@ def lambda_handler(event, context):
     notify_slack(message, region)
 
     return message
+
+
+if __name__ == "__main__":
+    try:
+        boto3.setup_default_session(
+            profile_name=args.aws_profile, region_name=args.aws_region
+        )
+        json_content = json.loads(open("event.json", "r").read())
+        handler(json_content, None)
+    except Exception as e:
+        logger.error(e)
