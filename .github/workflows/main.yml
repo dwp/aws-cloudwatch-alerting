@@ -50,7 +50,7 @@ jobs:
 
       - name: Produce zip
         working-directory: ./artifacts
-        run: zip -qq -r ../${{ github.repository }}-${{ needs.get-publish-version.outputs.publish-version }}.zip *
+        run: zip -qq -r ../aws-cloudwatch-alerting-${{ needs.get-publish-version.outputs.publish-version }}.zip *
 
       - name: Create GitHub Release
         id: create_release
@@ -70,6 +70,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.repository }}-${{ needs.get-publish-version.outputs.publish-version }}.zip
-          asset_name: ${{ github.repository }}-${{ needs.get-publish-version.outputs.publish-version }}.zip
+          asset_path: aws-cloudwatch-alerting-${{ needs.get-publish-version.outputs.publish-version }}.zip
+          asset_name: aws-cloudwatch-alerting-${{ needs.get-publish-version.outputs.publish-version }}.zip
           asset_content_type: application/zip
