@@ -38,19 +38,19 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = { "Namespace": "Prowler/Monitoring" }
+        event = {"Namespace": "Prowler/Monitoring"}
 
-        (actual_slack_channel, actual_message) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, 
-            region, 
-            slack_channel_main
+        (
+            actual_slack_channel,
+            actual_message,
+        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main
         )
 
         prowler_cw_mock.assert_called_once_with(event, region)
         custom_cw_mock.assert_not_called()
 
         self.assertEqual(actual_slack_channel, slack_channel_main)
-
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -63,21 +63,21 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = { "Namespace": "Test/Monitoring" }
+        event = {"Namespace": "Test/Monitoring"}
 
-        custom_cw_mock.return_value = (slack_channel_critical, { "Test": "test" })
+        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
 
-        (actual_slack_channel, actual_message) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, 
-            region, 
-            slack_channel_main
+        (
+            actual_slack_channel,
+            actual_message,
+        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main
         )
 
         prowler_cw_mock.assert_not_called()
         custom_cw_mock.assert_called_once_with(event, region)
 
         self.assertEqual(actual_slack_channel, slack_channel_critical)
-
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -90,21 +90,21 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = { "Test": "Test/Monitoring" }
+        event = {"Test": "Test/Monitoring"}
 
-        custom_cw_mock.return_value = (slack_channel_critical, { "Test": "test" })
+        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
 
-        (actual_slack_channel, actual_message) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, 
-            region, 
-            slack_channel_main
+        (
+            actual_slack_channel,
+            actual_message,
+        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main
         )
 
         prowler_cw_mock.assert_not_called()
         custom_cw_mock.assert_called_once_with(event, region)
 
         self.assertEqual(actual_slack_channel, slack_channel_critical)
-
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -117,21 +117,21 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = { "Namespace": "" }
+        event = {"Namespace": ""}
 
-        custom_cw_mock.return_value = (slack_channel_critical, { "Test": "test" })
+        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
 
-        (actual_slack_channel, actual_message) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, 
-            region, 
-            slack_channel_main
+        (
+            actual_slack_channel,
+            actual_message,
+        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main
         )
 
         prowler_cw_mock.assert_not_called()
         custom_cw_mock.assert_called_once_with(event, region)
 
         self.assertEqual(actual_slack_channel, slack_channel_critical)
-
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -144,14 +144,15 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = { "Namespace": None }
+        event = {"Namespace": None}
 
-        custom_cw_mock.return_value = (slack_channel_critical, { "Test": "test" })
+        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
 
-        (actual_slack_channel, actual_message) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, 
-            region, 
-            slack_channel_main
+        (
+            actual_slack_channel,
+            actual_message,
+        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main
         )
 
         prowler_cw_mock.assert_not_called()
@@ -159,20 +160,15 @@ class TestRetriever(unittest.TestCase):
 
         self.assertEqual(actual_slack_channel, slack_channel_critical)
 
-
     def test_get_tags_for_cloudwatch_alarm_calls_aws_correctly(
         self,
     ):
         cw_client = MagicMock()
         cw_client.list_tags_for_resource = MagicMock()
 
-        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm(
-            cw_client,
-            alarm_arn
-        )
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm(cw_client, alarm_arn)
 
         cw_client.list_tags_for_resource.assert_called_once_with(ResourceARN=alarm_arn)
-
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
@@ -440,7 +436,6 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
@@ -484,7 +479,6 @@ class TestRetriever(unittest.TestCase):
         }
         self.assertEqual(actual_slack_channel, slack_channel_main)
         self.assertEqual(expected_attachment, actual_attachment)
-        
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
@@ -532,7 +526,6 @@ class TestRetriever(unittest.TestCase):
         }
         self.assertEqual(actual_slack_channel, slack_channel_main)
         self.assertEqual(expected_attachment, actual_attachment)
-        
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
