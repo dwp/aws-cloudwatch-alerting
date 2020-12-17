@@ -263,9 +263,9 @@ def config_custom_cloudwatch_alarm_notification(message, region):
     elif notification_type.lower() == "error":
         icon = ":fire:"
         colour = "danger"
-        if severity.lower() == "critical":
+        if severity.lower() == "high" or severity.lower() == "critical":
             slack_channel = slack_channel_critical
-    elif severity.lower() == "high" or severity.lower() == "critical":
+    elif severity.lower() == "critical":
             slack_channel = slack_channel_critical
 
     title = f"{icon} *{environment_name.upper()}*: \"_{alarm_name}_\" in {region}"
@@ -531,7 +531,7 @@ def notify_slack(message, region):
             )
         elif "AlarmName" in message:
             # this is a CloudWatch Alarm; assume it is from prowler monitoring...
-            (channel, attachment) = config_cloudwatch_alarm_notification(message, region)
+            (channel, attachment) = config_cloudwatch_alarm_notification(message, region, slack_channel)
             payload["channel"] = channel
             payload["attachments"].append(
                 attachment
