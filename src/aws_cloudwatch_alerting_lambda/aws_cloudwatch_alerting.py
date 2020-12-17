@@ -221,17 +221,18 @@ def config_cloudwatch_event_notification(message, region):
 
 def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel):
     return (
-        (prowler_slack_channel, config_prowler_cloudwatch_alarm_notification(message, region))
+        (
+            prowler_slack_channel,
+            config_prowler_cloudwatch_alarm_notification(message, region),
+        )
         if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring"
         else config_custom_cloudwatch_alarm_notification(message, region)
     )
 
 
 def get_tags_for_cloudwatch_alarm(alarm_arn):
-    cw_client = boto3.client('cloudwatch')
-    return cw_client.list_tags_for_resource(
-        ResourceARN=alarm_arn
-    )["Tags"]
+    cw_client = boto3.client("cloudwatch")
+    return cw_client.list_tags_for_resource(ResourceARN=alarm_arn)["Tags"]
 
 
 def config_custom_cloudwatch_alarm_notification(message, region):
@@ -241,10 +242,14 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
     alarm_name = message["AlarmName"]
 
-    cw_client = boto3.client('cloudwatch')
+    cw_client = boto3.client("cloudwatch")
     tags = get_tags_for_cloudwatch_alarm(message["AlarmArn"])
-    severity = next((tag["Value"] for tag in tags if tag["Key"] == "severity"), "NOT_SET")
-    notification_type = next((tag["Value"] for tag in tags if tag["Key"] == "notification_type"), "NOT_SET")
+    severity = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "severity"), "NOT_SET"
+    )
+    notification_type = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "notification_type"), "NOT_SET"
+    )
 
     alarm_url = (
         "https://console.aws.amazon.com/cloudwatch/home?region="
@@ -266,32 +271,28 @@ def config_custom_cloudwatch_alarm_notification(message, region):
         if severity.lower() == "critical":
             slack_channel = slack_channel_critical
     elif severity.lower() == "high" or severity.lower() == "critical":
-            slack_channel = slack_channel_critical
+        slack_channel = slack_channel_critical
 
-    title = f"{icon} *{environment_name.upper()}*: \"_{alarm_name}_\" in {region}"
+    title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    return (slack_channel, {
-        "color": colour,
-        "fallback": title,
-        "fields": [
-            {
-                "title": "AWS Console link",
-                "value": alarm_url
-            },
-            {
-                "title": "Trigger time",
-                "value": message["StateUpdatedTimestamp"].strftime("%Y-%m-%dT%H:%M:%SZ")
-            },
-            {
-                "title": "Severity",
-                "value": severity
-            },
-            {
-                "title": "Type",
-                "value": notification_type
-            }
-        ],
-    })
+    return (
+        slack_channel,
+        {
+            "color": colour,
+            "fallback": title,
+            "fields": [
+                {"title": "AWS Console link", "value": alarm_url},
+                {
+                    "title": "Trigger time",
+                    "value": message["StateUpdatedTimestamp"].strftime(
+                        "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                },
+                {"title": "Severity", "value": severity},
+                {"title": "Type", "value": notification_type},
+            ],
+        },
+    )
 
 
 def config_prowler_cloudwatch_alarm_notification(message, region):
@@ -531,11 +532,11 @@ def notify_slack(message, region):
             )
         elif "AlarmName" in message:
             # this is a CloudWatch Alarm; assume it is from prowler monitoring...
-            (channel, attachment) = config_cloudwatch_alarm_notification(message, region)
-            payload["channel"] = channel
-            payload["attachments"].append(
-                attachment
+            (channel, attachment) = config_cloudwatch_alarm_notification(
+                message, region
             )
+            payload["channel"] = channel
+            payload["attachments"].append(attachment)
         else:
             payload["text"] = "Unidentified notification"
             payload["attachments"].append(default_notification(message))
