@@ -245,10 +245,10 @@ def config_custom_cloudwatch_alarm_notification(message, region):
     cw_client = boto3.client("cloudwatch")
     tags = get_tags_for_cloudwatch_alarm(message["AlarmArn"])
     severity = next(
-        (tag["Value"] for tag in tags if tag["Key"] == "severity"), "NOT_SET"
+        (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]), "NOT_SET"
     )
     notification_type = next(
-        (tag["Value"] for tag in tags if tag["Key"] == "notification_type"), "NOT_SET"
+        (tag["Value"] for tag in tags if tag["Key"] == "notification_type" and tag["Value"]), "NOT_SET"
     )
 
     alarm_url = (

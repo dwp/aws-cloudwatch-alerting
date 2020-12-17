@@ -38,6 +38,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "low",
             "information",
+            "low",
+            "information",
             ":information_source:",
             "good",
             slack_channel_main,
@@ -53,6 +55,8 @@ class TestRetriever(unittest.TestCase):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            "medium",
+            "information",
             "medium",
             "information",
             ":information_source:",
@@ -72,6 +76,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "high",
             "information",
+            "high",
+            "information",
             ":information_source:",
             "good",
             slack_channel_main,
@@ -87,6 +93,8 @@ class TestRetriever(unittest.TestCase):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            "critical",
+            "information",
             "critical",
             "information",
             ":information_source:",
@@ -106,6 +114,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "low",
             "warning",
+            "low",
+            "warning",
             ":warning:",
             "warning",
             slack_channel_main,
@@ -121,6 +131,8 @@ class TestRetriever(unittest.TestCase):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            "medium",
+            "warning",
             "medium",
             "warning",
             ":warning:",
@@ -140,6 +152,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "high",
             "warning",
+            "high",
+            "warning",
             ":warning:",
             "warning",
             slack_channel_main,
@@ -155,6 +169,8 @@ class TestRetriever(unittest.TestCase):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            "critical",
+            "warning",
             "critical",
             "warning",
             ":warning:",
@@ -174,6 +190,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "low",
             "error",
+            "low",
+            "error",
             ":fire:",
             "danger",
             slack_channel_main,
@@ -189,6 +207,8 @@ class TestRetriever(unittest.TestCase):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            "medium",
+            "error",
             "medium",
             "error",
             ":fire:",
@@ -208,6 +228,8 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "high",
             "error",
+            "high",
+            "error",
             ":fire:",
             "danger",
             slack_channel_critical,
@@ -225,9 +247,49 @@ class TestRetriever(unittest.TestCase):
             tags_mock,
             "critical",
             "error",
+            "critical",
+            "error",
             ":fire:",
             "danger",
             slack_channel_critical,
+        )
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_no_tags(
+        self,
+        tags_mock,
+    ):
+        custom_cloudwatch_alarm_notification_returns_right_values(
+            self,
+            tags_mock,
+            None,
+            None,
+            "NOT_SET",
+            "NOT_SET",
+            ":warning:",
+            "warning",
+            slack_channel_main,
+        )
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_unrecognised_tags(
+        self,
+        tags_mock,
+    ):
+        custom_cloudwatch_alarm_notification_returns_right_values(
+            self,
+            tags_mock,
+            "test",
+            "test",
+            "test",
+            "test",
+            ":warning:",
+            "warning",
+            slack_channel_main,
         )
 
 
@@ -236,6 +298,8 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     tags_mock,
     severity_tag,
     type_tag,
+    expected_severity,
+    expected_type,
     expected_icon,
     expected_colour,
     expected_slack_channel,
@@ -273,8 +337,8 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                 "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
             },
             {"title": "Trigger time", "value": state_updated_timestamp_string},
-            {"title": "Severity", "value": severity_tag},
-            {"title": "Type", "value": type_tag},
+            {"title": "Severity", "value": expected_severity},
+            {"title": "Type", "value": expected_type},
         ],
     }
     self.assertEqual(actual_slack_channel, expected_slack_channel)
