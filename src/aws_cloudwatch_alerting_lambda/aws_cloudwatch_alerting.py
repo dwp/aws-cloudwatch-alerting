@@ -230,9 +230,9 @@ def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel)
     )
 
 
-def get_tags_for_cloudwatch_alarm(alarm_arn):
-    cw_client = boto3.client("cloudwatch")
-    return cw_client.list_tags_for_resource(ResourceARN=alarm_arn)["Tags"]
+def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
+    tags = cw_client.list_tags_for_resource(ResourceARN=alarm_arn)
+    return tags["Tags"] if tags else []
 
 
 def config_custom_cloudwatch_alarm_notification(message, region):
@@ -243,7 +243,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
     alarm_name = message["AlarmName"]
 
     cw_client = boto3.client("cloudwatch")
-    tags = get_tags_for_cloudwatch_alarm(message["AlarmArn"])
+    tags = get_tags_for_cloudwatch_alarm(cw_client, message["AlarmArn"])
     severity = next(
         (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]),
         "NOT_SET",
