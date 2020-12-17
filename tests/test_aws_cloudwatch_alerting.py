@@ -26,7 +26,9 @@ os.environ["AWS_ENVIRONMENT"] = aws_environment
 
 
 class TestRetriever(unittest.TestCase):
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_information(
         self,
         tags_mock,
@@ -41,8 +43,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_information(
         self,
         tags_mock,
@@ -57,8 +60,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_information(
         self,
         tags_mock,
@@ -73,8 +77,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_information(
         self,
         tags_mock,
@@ -89,8 +94,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_warning(
         self,
         tags_mock,
@@ -105,8 +111,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_warning(
         self,
         tags_mock,
@@ -121,8 +128,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_warning(
         self,
         tags_mock,
@@ -137,8 +145,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_warning(
         self,
         tags_mock,
@@ -153,8 +162,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_critical,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_error(
         self,
         tags_mock,
@@ -169,8 +179,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_error(
         self,
         tags_mock,
@@ -185,8 +196,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_main,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_error(
         self,
         tags_mock,
@@ -201,8 +213,9 @@ class TestRetriever(unittest.TestCase):
             slack_channel_critical,
         )
 
-
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_error(
         self,
         tags_mock,
@@ -216,6 +229,7 @@ class TestRetriever(unittest.TestCase):
             "danger",
             slack_channel_critical,
         )
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
@@ -235,46 +249,37 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     }
 
     tags = [
-        {
-            'Key': 'severity',
-            'Value': severity_tag
-        },
-        {
-            'Key': 'notification_type',
-            'Value': type_tag
-        },
+        {"Key": "severity", "Value": severity_tag},
+        {"Key": "notification_type", "Value": type_tag},
     ]
 
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-    (actual_slack_channel, actual_attachment) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(alarm, region)
+    (
+        actual_slack_channel,
+        actual_attachment,
+    ) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+        alarm, region
+    )
     tags_mock.assert_called_once_with(alarm_arn)
 
     expected_attachment = {
         "color": expected_colour,
-        "fallback": f"{expected_icon} *TEST_ENVIRONMENT*: \"_test_alarm name_\" in eu-test-2",
+        "fallback": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
         "fields": [
             {
                 "title": "AWS Console link",
-                "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
+                "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
             },
-            {
-                "title": "Trigger time",
-                "value": state_updated_timestamp_string
-            },
-            {
-                "title": "Severity",
-                "value": severity_tag
-            },
-            {
-                "title": "Type",
-                "value": type_tag
-            }
+            {"title": "Trigger time", "value": state_updated_timestamp_string},
+            {"title": "Severity", "value": severity_tag},
+            {"title": "Type", "value": type_tag},
         ],
     }
     self.assertEqual(actual_slack_channel, expected_slack_channel)
     self.assertEqual(expected_attachment, actual_attachment)
+
 
 if __name__ == "__main__":
     unittest.main()
