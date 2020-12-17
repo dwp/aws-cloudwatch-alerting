@@ -1,1 +1,0 @@
-"""AWS Cloudwatch Alerting Lambda."""

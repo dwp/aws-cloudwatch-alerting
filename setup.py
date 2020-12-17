@@ -12,7 +12,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     entry_points={
         "console_scripts": [
-            "aws_cloudwatch_alerting=aws_cloudwatch_alerting:main"
+            "aws_cloudwatch_alerting=aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting:main"
         ]
     },
     package_dir={"": "src"},
