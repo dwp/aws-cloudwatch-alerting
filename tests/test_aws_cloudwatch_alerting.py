@@ -13,7 +13,9 @@ region = "eu-test-2"
 alarm_name = "test_alarm name"
 alarm_arn = "test_alarm_arn"
 state_updated_timestamp_string = "2019-12-01T13:04:03Z"
-state_updated_datetime = datetime.strptime(state_updated_timestamp_string, "%Y-%m-%dT%H:%M:%SZ")
+state_updated_datetime = datetime.strptime(
+    state_updated_timestamp_string, "%Y-%m-%dT%H:%M:%SZ"
+)
 slack_channel_main = "test_slack_channel_main"
 slack_channel_critical = "test_slack_channel_critical"
 aws_environment = "test_environment"
@@ -24,7 +26,9 @@ os.environ["AWS_ENVIRONMENT"] = aws_environment
 
 
 class TestRetriever(unittest.TestCase):
-    @mock.patch("aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm")
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_information(
         self,
         tags_mock,
