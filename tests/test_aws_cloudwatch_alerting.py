@@ -50,18 +50,19 @@ class TestRetriever(unittest.TestCase):
         prowler_cw_mock,
     ):
         event = {"Namespace": "Prowler/Monitoring"}
+        payload = {}
+        return_payload = { "channel": slack_channel_main }
 
-        (
-            actual_slack_channel,
-            actual_message,
-        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, region, slack_channel_main
+        prowler_cw_mock.return_value = return_payload
+
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
         )
 
-        prowler_cw_mock.assert_called_once_with(event, region)
+        prowler_cw_mock.assert_called_once_with(event, region, payload)
         custom_cw_mock.assert_not_called()
 
-        self.assertEqual(actual_slack_channel, slack_channel_main)
+        self.assertEqual(actual_message["channel"], slack_channel_main)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -75,20 +76,19 @@ class TestRetriever(unittest.TestCase):
         prowler_cw_mock,
     ):
         event = {"Namespace": "Test/Monitoring"}
+        payload = {}
+        return_payload = { "channel": slack_channel_critical }
 
-        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
+        custom_cw_mock.return_value = return_payload
 
-        (
-            actual_slack_channel,
-            actual_message,
-        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, region, slack_channel_main
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
         )
 
         prowler_cw_mock.assert_not_called()
-        custom_cw_mock.assert_called_once_with(event, region)
+        custom_cw_mock.assert_called_once_with(event, region, payload)
 
-        self.assertEqual(actual_slack_channel, slack_channel_critical)
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -102,20 +102,19 @@ class TestRetriever(unittest.TestCase):
         prowler_cw_mock,
     ):
         event = {"Test": "Test/Monitoring"}
+        payload = {}
+        return_payload = { "channel": slack_channel_critical }
 
-        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
+        custom_cw_mock.return_value = return_payload
 
-        (
-            actual_slack_channel,
-            actual_message,
-        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, region, slack_channel_main
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
         )
 
         prowler_cw_mock.assert_not_called()
-        custom_cw_mock.assert_called_once_with(event, region)
+        custom_cw_mock.assert_called_once_with(event, region, payload)
 
-        self.assertEqual(actual_slack_channel, slack_channel_critical)
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -129,20 +128,19 @@ class TestRetriever(unittest.TestCase):
         prowler_cw_mock,
     ):
         event = {"Namespace": ""}
+        payload = {}
+        return_payload = { "channel": slack_channel_critical }
 
-        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
+        custom_cw_mock.return_value = return_payload
 
-        (
-            actual_slack_channel,
-            actual_message,
-        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, region, slack_channel_main
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
         )
 
         prowler_cw_mock.assert_not_called()
-        custom_cw_mock.assert_called_once_with(event, region)
+        custom_cw_mock.assert_called_once_with(event, region, payload)
 
-        self.assertEqual(actual_slack_channel, slack_channel_critical)
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
@@ -156,20 +154,19 @@ class TestRetriever(unittest.TestCase):
         prowler_cw_mock,
     ):
         event = {"Namespace": None}
+        payload = {}
+        return_payload = { "channel": slack_channel_critical }
 
-        custom_cw_mock.return_value = (slack_channel_critical, {"Test": "test"})
+        custom_cw_mock.return_value = return_payload
 
-        (
-            actual_slack_channel,
-            actual_message,
-        ) = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
-            event, region, slack_channel_main
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
         )
 
         prowler_cw_mock.assert_not_called()
-        custom_cw_mock.assert_called_once_with(event, region)
+        custom_cw_mock.assert_called_once_with(event, region, payload)
 
-        self.assertEqual(actual_slack_channel, slack_channel_critical)
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
 
     def test_get_tags_for_cloudwatch_alarm_calls_aws_correctly(
         self,
@@ -196,7 +193,6 @@ class TestRetriever(unittest.TestCase):
             "low",
             "information",
             icon_information_source,
-            "good",
             slack_channel_main,
         )
 
@@ -215,7 +211,6 @@ class TestRetriever(unittest.TestCase):
             "medium",
             "information",
             icon_information_source,
-            "good",
             slack_channel_main,
         )
 
@@ -234,7 +229,6 @@ class TestRetriever(unittest.TestCase):
             "high",
             "information",
             icon_information_source,
-            "good",
             slack_channel_main,
         )
 
@@ -253,7 +247,6 @@ class TestRetriever(unittest.TestCase):
             "critical",
             "information",
             icon_information_source,
-            "good",
             slack_channel_main,
         )
 
@@ -272,7 +265,6 @@ class TestRetriever(unittest.TestCase):
             "low",
             "warning",
             icon_warning,
-            "warning",
             slack_channel_main,
         )
 
@@ -291,7 +283,6 @@ class TestRetriever(unittest.TestCase):
             "medium",
             "warning",
             icon_warning,
-            "warning",
             slack_channel_main,
         )
 
@@ -310,7 +301,6 @@ class TestRetriever(unittest.TestCase):
             "high",
             "warning",
             icon_warning,
-            "warning",
             slack_channel_main,
         )
 
@@ -329,7 +319,6 @@ class TestRetriever(unittest.TestCase):
             "critical",
             "warning",
             icon_warning,
-            "warning",
             slack_channel_critical,
         )
 
@@ -348,7 +337,6 @@ class TestRetriever(unittest.TestCase):
             "low",
             "error",
             icon_fire,
-            "danger",
             slack_channel_main,
         )
 
@@ -367,7 +355,6 @@ class TestRetriever(unittest.TestCase):
             "medium",
             "error",
             icon_fire,
-            "danger",
             slack_channel_main,
         )
 
@@ -386,7 +373,6 @@ class TestRetriever(unittest.TestCase):
             "high",
             "error",
             icon_fire,
-            "danger",
             slack_channel_critical,
         )
 
@@ -405,7 +391,6 @@ class TestRetriever(unittest.TestCase):
             "critical",
             "error",
             icon_fire,
-            "danger",
             slack_channel_critical,
         )
 
@@ -424,7 +409,6 @@ class TestRetriever(unittest.TestCase):
             "NOT_SET",
             "NOT_SET",
             icon_warning,
-            "warning",
             slack_channel_main,
         )
 
@@ -443,7 +427,6 @@ class TestRetriever(unittest.TestCase):
             "test",
             "test",
             icon_warning,
-            "warning",
             slack_channel_main,
         )
 
@@ -467,32 +450,31 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        (
-            actual_slack_channel,
-            actual_attachment,
-        ) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region
+        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+            alarm, region, {}
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
-        expected_attachment = {
-            "color": "warning",
-            "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "fields": [
-                {
-                    "title": attachment_title_link_field,
-                    "value": expected_cloudwatch_url,
-                },
-                {
-                    "title": trigger_time_field_title,
-                    "value": state_updated_timestamp_string,
-                },
-                {"title": severity_field_title, "value": "NOT_SET"},
-                {"title": type_field_title, "value": "NOT_SET"},
-            ],
+        expected_payload = {
+            "channel": slack_channel_main,
+            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+            "blocks": [{
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "fields": [
+                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
+                        {
+                            "title": trigger_time_field_title,
+                            "value": state_updated_timestamp_string,
+                        },
+                        {"title": severity_field_title, "value": "NOT_SET"},
+                        {"title": type_field_title, "value": "NOT_SET"},
+                    ],
+                }
+            }]
         }
-        self.assertEqual(actual_slack_channel, slack_channel_main)
-        self.assertEqual(expected_attachment, actual_attachment)
+        self.assertEqual(expected_payload, actual_payload)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
@@ -517,32 +499,31 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        (
-            actual_slack_channel,
-            actual_attachment,
-        ) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region
+        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+            alarm, region, {}
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
-        expected_attachment = {
-            "color": "warning",
-            "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "fields": [
-                {
-                    "title": attachment_title_link_field,
-                    "value": expected_cloudwatch_url,
-                },
-                {
-                    "title": trigger_time_field_title,
-                    "value": state_updated_timestamp_string,
-                },
-                {"title": severity_field_title, "value": "NOT_SET"},
-                {"title": type_field_title, "value": "NOT_SET"},
-            ],
+        expected_payload = {
+            "channel": slack_channel_main,
+            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+            "blocks": [{
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "fields": [
+                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
+                        {
+                            "title": trigger_time_field_title,
+                            "value": state_updated_timestamp_string,
+                        },
+                        {"title": severity_field_title, "value": "NOT_SET"},
+                        {"title": type_field_title, "value": "NOT_SET"},
+                    ],
+                }
+            }]
         }
-        self.assertEqual(actual_slack_channel, slack_channel_main)
-        self.assertEqual(expected_attachment, actual_attachment)
+        self.assertEqual(expected_payload, actual_payload)
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
@@ -567,32 +548,31 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        (
-            actual_slack_channel,
-            actual_attachment,
-        ) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region
+        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+            alarm, region, {}
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
-        expected_attachment = {
-            "color": "warning",
-            "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "fields": [
-                {
-                    "title": attachment_title_link_field,
-                    "value": expected_cloudwatch_url,
-                },
-                {
-                    "title": trigger_time_field_title,
-                    "value": state_updated_timestamp_string,
-                },
-                {"title": severity_field_title, "value": "NOT_SET"},
-                {"title": type_field_title, "value": "NOT_SET"},
-            ],
+        expected_payload = {
+            "channel": slack_channel_main,
+            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+            "blocks": [{
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "fields": [
+                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
+                        {
+                            "title": trigger_time_field_title,
+                            "value": state_updated_timestamp_string,
+                        },
+                        {"title": severity_field_title, "value": "NOT_SET"},
+                        {"title": type_field_title, "value": "NOT_SET"},
+                    ],
+                }
+            }]
         }
-        self.assertEqual(actual_slack_channel, slack_channel_main)
-        self.assertEqual(expected_attachment, actual_attachment)
+        self.assertEqual(expected_payload, actual_payload)
 
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
@@ -603,7 +583,6 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     expected_severity,
     expected_type,
     expected_icon,
-    expected_colour,
     expected_slack_channel,
 ):
     self.maxDiff = None
@@ -622,32 +601,32 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-    (
-        actual_slack_channel,
-        actual_attachment,
-    ) = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-        alarm, region
+    actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+        alarm, region, {}
     )
     tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
-    expected_attachment = {
-        "color": expected_colour,
-        "fallback": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-        "fields": [
-            {
-                "title": attachment_title_link_field,
-                "value": expected_cloudwatch_url,
-            },
-            {
-                "title": trigger_time_field_title,
-                "value": state_updated_timestamp_string,
-            },
-            {"title": severity_field_title, "value": expected_severity},
-            {"title": type_field_title, "value": expected_type},
-        ],
+    expected_payload = {
+        "channel": expected_slack_channel,
+        "text": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+        "blocks": [{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "fields": [
+                    {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
+                    {
+                        "title": trigger_time_field_title,
+                        "value": state_updated_timestamp_string,
+                    },
+                    {"title": severity_field_title, "value": expected_severity},
+                    {"title": type_field_title, "value": expected_type},
+                ],
+            }
+        }]
     }
-    self.assertEqual(actual_slack_channel, expected_slack_channel)
-    self.assertEqual(expected_attachment, actual_attachment)
+
+    self.assertEqual(expected_payload, actual_payload)
 
 
 if __name__ == "__main__":

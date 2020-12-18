@@ -103,13 +103,12 @@ def decrypt(encrypted_url):
         )
 
 
-def config_notification(message, region):
+def config_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing config notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
     )
 
-    states = {"COMPLIANT": "good", "NOT_APPLICABLE": "good", "NON_COMPLIANT": "danger"}
     no_emojis = {
         "COMPLIANT": "Compliant",
         "NOT_APPLICABLE": "N/A",
@@ -149,24 +148,23 @@ def config_notification(message, region):
         )
     )
 
-    return {
-        "color": states[message["newEvaluationResult"]["complianceType"]],
-        "fallback": "AWS Config Compliance Change detected " + config_rule_name,
-        "fields": [
-            {
-                "title": "AWS Config Compliance Rule [" + config_rule_name + "]",
-                "value": " has changed from ["
+    payload["text"] = "AWS Config Compliance Change detected " + config_rule_name
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "AWS Config Compliance Rule [" + config_rule_name + "] has changed from ["
                 + no_emojis[config_old_state]
                 + "] to ["
                 + emojis[config_new_state]
                 + "]\nThis script can't tell if everything is compliant or not. For full details check the AWS Console: "
                 + config_url,
-            }
-        ],
-    }
+        }
+    }]
+    return payload
 
 
-def config_cloudwatch_event_notification(message, region):
+def config_cloudwatch_event_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing cloudwatch event notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
@@ -295,35 +293,35 @@ def config_cloudwatch_event_notification(message, region):
         # we do not want to be alerted about any of these...
         quit()
     else:
-        return default_notification(message)
+        return default_notification(message, payload)
 
-    return {
-        "fallback": title,
-        "fields": [
-            {
-                "title": title,
-                "value": value
+    payload["text"] = title
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": value
                 + "\nFor full details check the AWS Console ["
                 + config_url
                 + "].",
-            }
-        ],
-    }
+        }
+    }]
+    return payload
 
 
-def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel):
+def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing cloudwatch notification", "message": {dumped_message}, "region": {region}, "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
     )
 
     if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring":
-        return (
-            prowler_slack_channel,
-            config_prowler_cloudwatch_alarm_notification(message, region),
-        )
+        payload = config_prowler_cloudwatch_alarm_notification(message, region, payload)
+        payload["channel"] = prowler_slack_channel
+    else:
+        payload = config_custom_cloudwatch_alarm_notification(message, region, payload)
 
-    return config_custom_cloudwatch_alarm_notification(message, region)
+    return payload
 
 
 def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
@@ -338,7 +336,7 @@ def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
     return tags["Tags"] if tags else []
 
 
-def config_custom_cloudwatch_alarm_notification(message, region):
+def config_custom_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing custom cloudwatch notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
@@ -406,11 +404,12 @@ def config_custom_cloudwatch_alarm_notification(message, region):
         f'Set trigger time", "trigger_time": {trigger_time}, "correlation_id": "{correlation_id}'
     )
 
-    return (
-        slack_channel,
-        {
-            "color": colour,
-            "fallback": title,
+    payload["channel"] = slack_channel
+    payload["text"] = title
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
             "fields": [
                 {"title": "AWS Console link", "value": alarm_url},
                 {
@@ -420,11 +419,12 @@ def config_custom_cloudwatch_alarm_notification(message, region):
                 {"title": "Severity", "value": severity},
                 {"title": "Type", "value": notification_type},
             ],
-        },
-    )
+        }
+    }]
+    return payload
 
 
-def config_prowler_cloudwatch_alarm_notification(message, region):
+def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing prowler notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
@@ -521,7 +521,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region):
     }
 
 
-def guardduty_notification(message, region):
+def guardduty_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing guard duty notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
@@ -540,13 +540,12 @@ def guardduty_notification(message, region):
         + "#/findings"
     )
 
-    return {
-        "color": "danger",
-        "fallback": "AWS GuardDuty Finding Type [" + gd_finding_detail_type + "]",
-        "fields": [
-            {
-                "title": "AWS GuardDuty Finding.",
-                "value": "Finding of type ["
+    payload["text"] = "AWS GuardDuty Finding Type [" + gd_finding_detail_type + "]"
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "Finding of type ["
                 + gd_finding_detail_type
                 + "] due to an action of type ["
                 + gd_finding_detail_service_action_type
@@ -554,19 +553,17 @@ def guardduty_notification(message, region):
                 + gd_finding_detail_resource_type
                 + "].\nFor full details check the AWS Console ["
                 + gd_url
-                + "].",
-            }
-        ],
-    }
+                + "]."
+        }
+    }]
+    return payload
 
 
-def app_notification(slack_message, region):
+def app_notification(slack_message, region, payload):
     dumped_slack_message = get_escaped_json_string(slack_message)
     logger.info(
         f'Processing app notification", "slack_message": {dumped_slack_message}, "correlation_id": "{correlation_id}'
     )
-
-    states = {"INFO": "good", "ERROR": "danger"}
 
     recognised_apps = {
         "Security": "",
@@ -594,31 +591,38 @@ def app_notification(slack_message, region):
         f'Created app notification", "app_function_message": {dumped_app_function_message}, "correlation_id": "{correlation_id}'
     )
 
-    return {
-        "color": states[app_function_message_type],
-        "fallback": title,
-        "fields": [
-            {
-                "title": title,
-                "value": app_function
-                + " "
-                + app_function_message_type
-                + ": "
-                + app_function_message,
-            }
-        ],
-    }
+    payload["text"] = title
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"{app_function} {app_function_message_type}: {app_function_message}"
+        }
+    }]
+    return payload
 
 
-def default_notification(message):
+def default_notification(message, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing default notification", "message": {dumped_message}, "correlation_id": "{correlation_id}'
     )
-    return {
-        "fallback": "A new message",
-        "fields": [{"title": "Message", "value": json.dumps(message), "short": False}],
-    }
+    payload["text"] = "Unidentified notification"
+    payload["blocks"] = [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "A new unindentified message"
+        },
+        "fields": [
+            {
+                "type": "plain_text",
+                "emoji": false,
+                "text": "dumped_message"
+            }
+        ]
+    }]
+    return payload
 
 
 # Send a message to a slack channel
@@ -639,7 +643,6 @@ def notify_slack(message, region):
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "attachments": [],
         }
 
         dumped_payload = get_escaped_json_string(payload)
@@ -647,7 +650,7 @@ def notify_slack(message, region):
             f'Created initial app slack payload", "payload": {dumped_payload}, "app_slack_url": {slack_url}, "app_slack_channel": {slack_channel}, "app_slack_username": {slack_username}, "correlation_id": "{correlation_id}'
         )
 
-        payload["attachments"].append(app_notification(message, region))
+        payload = app_notification(message, region, payload)
     else:
         # this is a status update from AWS...
 
@@ -664,7 +667,6 @@ def notify_slack(message, region):
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "attachments": [],
         }
 
         dumped_payload = get_escaped_json_string(payload)
@@ -673,10 +675,10 @@ def notify_slack(message, region):
         )
 
         if "detail-type" in message and message["detail-type"] == "GuardDuty Finding":
-            payload["attachments"].append(guardduty_notification(message, region))
+            payload = guardduty_notification(message, region, payload)
         elif "configRuleName" in message:
             # this is a compliance/non-compliance AWS Config message...
-            payload["attachments"].append(config_notification(message, region))
+            payload = config_notification(message, region, payload)
         elif (
             "messageType" in message
             and message["messageType"] == "ConfigurationItemChangeNotification"
@@ -688,23 +690,16 @@ def notify_slack(message, region):
             quit()
         elif "messageType" in message:
             # assume this is another type of AWS Config CloudWatch Event that we do not see so frequently...
-            payload["attachments"].append(
-                config_cloudwatch_event_notification(message, region)
-            )
+            payload = config_cloudwatch_event_notification(message, region, payload)
         elif "AlarmName" in message:
             if os.environ["USE_AWS_SLACK_CHANNELS"].lower() == "true":
-                (channel, attachment) = config_cloudwatch_alarm_notification(
-                    message, region, os.environ["AWS_SLACK_CHANNEL_MAIN"]
+                payload = config_cloudwatch_alarm_notification(
+                    message, region, os.environ["AWS_SLACK_CHANNEL_MAIN"], payload
                 )
-                payload["channel"] = channel
-                payload["attachments"].append(attachment)
             else:
-                payload["attachments"].append(
-                    config_prowler_cloudwatch_alarm_notification(message, region)
-                )
+                payload = config_prowler_cloudwatch_alarm_notification(message, region, payload)
         else:
-            payload["text"] = "Unidentified notification"
-            payload["attachments"].append(default_notification(message))
+            payload = default_notification(message, payload)
 
     dumped_payload = get_escaped_json_string(payload)
     logger.info(
