@@ -394,9 +394,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
     title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    logger.info(
-        f'Set title", "title": {title}, "correlation_id": "{correlation_id}'
-    )
+    logger.info(f'Set title", "title": {title}, "correlation_id": "{correlation_id}')
 
     trigger_time = (
         message["StateUpdatedTimestamp"].strftime(date_format)
@@ -629,9 +627,7 @@ def notify_slack(message, region):
     if "slack" in message:
         # this is some info from one of our apps, intended for an app-specific slack channel...
 
-        logger.info(
-            f'Processing app event", "correlation_id": "{correlation_id}'
-        )
+        logger.info(f'Processing app event", "correlation_id": "{correlation_id}')
 
         slack_url = os.environ["APP_INFO_SLACK_WEBHOOK_URL"]
         if not slack_url.startswith("http"):
@@ -655,9 +651,7 @@ def notify_slack(message, region):
     else:
         # this is a status update from AWS...
 
-        logger.info(
-            f'Processing aws event", "correlation_id": "{correlation_id}'
-        )
+        logger.info(f'Processing aws event", "correlation_id": "{correlation_id}')
 
         slack_url = os.environ["STATUS_SLACK_WEBHOOK_URL"]
 
@@ -723,7 +717,9 @@ def notify_slack(message, region):
 
 
 def get_escaped_json_string(json_dict):
-    serialized_json_dict = {k: v.isoformat() if type(v) is datetime else v for k, v in json_dict.items()}
+    serialized_json_dict = {
+        k: v.isoformat() if type(v) is datetime else v for k, v in json_dict.items()
+    }
     try:
         escaped_string = json.dumps(json.dumps(serialized_json_dict))
     except Exception:
@@ -758,7 +754,7 @@ def lambda_handler(event, context):
     logger.info(
         f'Parsed message", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
     )
-    
+
     notify_slack(message, region)
 
     return message
