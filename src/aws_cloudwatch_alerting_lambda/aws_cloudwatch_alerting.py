@@ -758,7 +758,7 @@ def notify_slack(message, region):
 
     if "blocks" in payload:
         payload["blocks"].insert(0, {"type": "divider"})
-        payload["blocks"].append(0, {"type": "divider"})
+        payload["blocks"].append({"type": "divider"})
 
     dumped_payload = get_escaped_json_string(payload)
     logger.info(
