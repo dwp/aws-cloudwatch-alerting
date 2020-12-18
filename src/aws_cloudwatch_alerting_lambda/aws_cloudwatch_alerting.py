@@ -8,6 +8,10 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 
+https_prefix = "https://"
+cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
+date_format = "%Y-%m-%dT%H:%M:%SZ"
+
 # Decrypt encrypted URL with KMS
 def decrypt(encrypted_url):
     region = os.environ["AWS_REGION"]
@@ -19,42 +23,6 @@ def decrypt(encrypted_url):
         return plaintext.decode()
     except Exception:
         logging.exception("Failed to decrypt URL with KMS")
-
-
-def cloudwatch_notification(message, region):
-    states = {"OK": "good", "INSUFFICIENT_DATA": "warning", "ALARM": "danger"}
-
-    return {
-        "color": states[message["NewStateValue"]],
-        "fallback": "Alarm {} triggered".format(message["AlarmName"]),
-        "fields": [
-            {"title": "Alarm Name", "value": message["AlarmName"], "short": True},
-            {
-                "title": "Alarm Description",
-                "value": message["AlarmDescription"],
-                "short": False,
-            },
-            {
-                "title": "Alarm reason",
-                "value": message["NewStateReason"],
-                "short": False,
-            },
-            {"title": "Old State", "value": message["OldStateValue"], "short": True},
-            {
-                "title": "Current State",
-                "value": message["NewStateValue"],
-                "short": True,
-            },
-            {
-                "title": "Link to Alarm",
-                "value": "https://console.aws.amazon.com/cloudwatch/home?region="
-                + region
-                + "#alarm:alarmFilter=ANY;name="
-                + urllib.parse.quote_plus(message["AlarmName"]),
-                "short": False,
-            },
-        ],
-    }
 
 
 def config_notification(message, region):
@@ -88,7 +56,7 @@ def config_notification(message, region):
         )
         quit()
     config_url = (
-        "https://"
+        https_prefix
         + region
         + ".console.aws.amazon.com/config/home#/rules/rule-details/"
         + urllib.parse.quote_plus(
@@ -121,7 +89,7 @@ def config_cloudwatch_event_notification(message, region):
     title = "AWS Config CloudWatch Event."
     value = "Unidentified"
     config_url = (
-        "https://"
+        https_prefix
         + region
         + ".console.aws.amazon.com/config/home?region="
         + region
@@ -145,7 +113,7 @@ def config_cloudwatch_event_notification(message, region):
             + "]"
         )
         config_url = (
-            "https://"
+            https_prefix
             + region
             + ".console.aws.amazon.com/config/home?region="
             + region
@@ -221,15 +189,6 @@ def config_cloudwatch_event_notification(message, region):
 
                 relationship_value = " due to a related NetworkInterfaces change"
                 value = value + relationship_value
-            # else:
-            # value = value + ".\nChanged properties are ["
-            # for prop in changed_properties:
-            #    value = value + prop + ", "
-            # value = value + "]"
-            # return {
-            #    "fallback": title,
-            #    "fields": [{"title": title, "value": value, "short": False}]
-            # }
 
         value = value + "."
 
@@ -264,15 +223,83 @@ def config_cloudwatch_event_notification(message, region):
     }
 
 
-def format_cloudwatch_metric_filters():
-    cloudwatch_metric_filters_full_json = os.environ["CLOUDWATCH_METRIC_FILTERS"]
+def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel):
+    if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring":
+        return (
+            prowler_slack_channel,
+            config_prowler_cloudwatch_alarm_notification(message, region),
+        )
 
-    cloudwatch_metric_filters = {}
-
-    return cloudwatch_metric_filters
+    return config_custom_cloudwatch_alarm_notification(message, region)
 
 
-def config_cloudwatch_alarm_notification(message, region):
+def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
+    tags = cw_client.list_tags_for_resource(ResourceARN=alarm_arn)
+    return tags["Tags"] if tags else []
+
+
+def config_custom_cloudwatch_alarm_notification(message, region):
+    slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
+    slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
+    environment_name = os.environ["AWS_ENVIRONMENT"]
+
+    alarm_name = message["AlarmName"]
+
+    cw_client = boto3.client("cloudwatch")
+    tags = get_tags_for_cloudwatch_alarm(cw_client, message["AlarmArn"])
+    severity = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]),
+        "NOT_SET",
+    )
+    notification_type = next(
+        (
+            tag["Value"]
+            for tag in tags
+            if tag["Key"] == "notification_type" and tag["Value"]
+        ),
+        "NOT_SET",
+    )
+
+    alarm_url = (
+        cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
+    )
+
+    colour = "warning"
+    icon = ":warning:"
+    slack_channel = slack_channel_main
+
+    if notification_type.lower() == "information":
+        icon = ":information_source:"
+        colour = "good"
+    elif notification_type.lower() == "error":
+        icon = ":fire:"
+        colour = "danger"
+        if severity.lower() == "high" or severity.lower() == "critical":
+            slack_channel = slack_channel_critical
+    elif severity.lower() == "critical":
+        slack_channel = slack_channel_critical
+
+    title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
+
+    return (
+        slack_channel,
+        {
+            "color": colour,
+            "fallback": title,
+            "fields": [
+                {"title": "AWS Console link", "value": alarm_url},
+                {
+                    "title": "Trigger time",
+                    "value": message["StateUpdatedTimestamp"].strftime(date_format),
+                },
+                {"title": "Severity", "value": severity},
+                {"title": "Type", "value": notification_type},
+            ],
+        },
+    )
+
+
+def config_prowler_cloudwatch_alarm_notification(message, region):
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
     cloudwatch_metric_filters = {
         #'3.1 Unauthorized API calls': '?UnauthorizedOperation ?AccessDenied',
@@ -292,19 +319,13 @@ def config_cloudwatch_alarm_notification(message, region):
         "3.14 VPC changes": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}",
     }
 
-    # cloudwatch_metric_filters = format_cloudwatch_metric_filters()
-
     title = "AWS CloudWatch Alarm."
     alarm_name = message["AlarmName"]
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
-        "https://console.aws.amazon.com/cloudwatch/home?region="
-        + region
-        + "#s=Alarms&alarm="
-        + alarm_name.replace(" ", "%20")
+        cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
     )
-    url_to_use = alarm_url
 
     # ...so let's construct a useful link: back to the cloudwatch log that actually triggered the alarm...
     alarm_datetime_full = message["StateChangeTime"]
@@ -325,12 +346,11 @@ def config_cloudwatch_alarm_notification(message, region):
         + "] alarm ["
         + alarm_name
         + "] triggered at ["
-        + cloudwatch_logs_search_end_datetime_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+        + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
         + "]."
     )
 
     aws_account_id = message["AWSAccountId"]
-    # log_group = "smimonitoring-dev-prowler-monitoring-logs"
     cloudwatch_log_group = os.environ["CLOUDWATCH_LOG_GROUP_NAME"]
     cloudwatch_log_stream = aws_account_id + "_CloudTrail_" + region
     cloudwatch_metric_filter = ""
@@ -342,7 +362,7 @@ def config_cloudwatch_alarm_notification(message, region):
     cloudwatch_metric_filter = cloudwatch_metric_filter.replace("=", "%3D")
 
     cloudwatch_log_url = (
-        "https://console.aws.amazon.com/cloudwatch/home?region="
+        cloudwatch_url
         + region
         + "#logEventViewer:group="
         + cloudwatch_log_group
@@ -351,11 +371,10 @@ def config_cloudwatch_alarm_notification(message, region):
         + ";filter="
         + cloudwatch_metric_filter
         + ";start="
-        + cloudwatch_logs_search_start_datetime_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+        + cloudwatch_logs_search_start_datetime_object.strftime(date_format)
         + ";end="
-        + cloudwatch_logs_search_end_datetime_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+        + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
     )
-    url_to_use = cloudwatch_log_url
 
     return {
         "color": "danger",
@@ -365,7 +384,7 @@ def config_cloudwatch_alarm_notification(message, region):
                 "title": title,
                 "value": value
                 + " For full details check the AWS Console ["
-                + url_to_use
+                + cloudwatch_log_url
                 + "].",
             }
         ],
@@ -379,7 +398,7 @@ def guardduty_notification(message, region):
     ]
     gd_finding_detail_resource_type = message["detail"]["resource"]["resourceType"]
     gd_url = (
-        "https://"
+        https_prefix
         + region
         + ".console.aws.amazon.com/guardduty/home?region="
         + region
@@ -510,10 +529,16 @@ def notify_slack(message, region):
                 config_cloudwatch_event_notification(message, region)
             )
         elif "AlarmName" in message:
-            # this is a CloudWatch Alarm; assume it is from prowler monitoring...
-            payload["attachments"].append(
-                config_cloudwatch_alarm_notification(message, region)
-            )
+            if os.environ["USE_AWS_SLACK_CHANNELS"].lower() == "true":
+                (channel, attachment) = config_cloudwatch_alarm_notification(
+                    message, region, os.environ["AWS_SLACK_CHANNEL_MAIN"]
+                )
+                payload["channel"] = channel
+                payload["attachments"].append(attachment)
+            else:
+                payload["attachments"].append(
+                    config_prowler_cloudwatch_alarm_notification(message, region)
+                )
         else:
             payload["text"] = "Unidentified notification"
             payload["attachments"].append(default_notification(message))
@@ -541,3 +566,14 @@ def lambda_handler(event, context):
     notify_slack(message, region)
 
     return message
+
+
+if __name__ == "__main__":
+    try:
+        boto3.setup_default_session(
+            profile_name=args.aws_profile, region_name=args.aws_region
+        )
+        json_content = json.loads(open("event.json", "r").read())
+        lambda_handler(json_content, None)
+    except Exception as e:
+        logger.error(e)
