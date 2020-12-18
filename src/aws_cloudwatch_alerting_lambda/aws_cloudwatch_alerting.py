@@ -2,7 +2,7 @@
 # https://raw.githubusercontent.com/terraform-aws-modules/terraform-aws-notify-slack/659b4aac4aee2ab026d9f117f52a90cfc7ae0cff/functions/notify_slack.py
 # installed by script
 from __future__ import print_function
-import os, boto3, json, base64, argparse, sys, socket
+import os, boto3, json, base64, argparse, sys, socket, uuid
 import urllib.request, urllib.parse
 import logging
 from datetime import datetime
@@ -12,6 +12,7 @@ https_prefix = "https://"
 cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
 date_format = "%Y-%m-%dT%H:%M:%SZ"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
+correlation_id = str(uuid.uuid4())
 
 
 # Initialise logging
@@ -82,17 +83,32 @@ logger = setup_logging(log_level)
 # Decrypt encrypted URL with KMS
 def decrypt(encrypted_url):
     region = os.environ["AWS_REGION"]
+    logger.info(
+        f'Decrypting URL", "encrypted_url": {encrypted_url}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     try:
         kms = boto3.client("kms", region_name=region)
         plaintext = kms.decrypt(CiphertextBlob=base64.b64decode(encrypted_url))[
             "Plaintext"
         ]
+        logger.info(
+            f'Decrypted URL", "encrypted_url": {encrypted_url}, "plaintext": {plaintext}, "region": {region}, "correlation_id": "{correlation_id}'
+        )
         return plaintext.decode()
     except Exception:
         logging.exception("Failed to decrypt URL with KMS")
+        logger.error(
+            f'Failed to decrypt URL with KMS", "encrypted_url": {encrypted_url}, "region": {region}, "correlation_id": "{correlation_id}'
+        )
 
 
 def config_notification(message, region):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing config notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     states = {"COMPLIANT": "good", "NOT_APPLICABLE": "good", "NON_COMPLIANT": "danger"}
     no_emojis = {
         "COMPLIANT": "Compliant",
@@ -151,6 +167,11 @@ def config_notification(message, region):
 
 
 def config_cloudwatch_event_notification(message, region):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing cloudwatch event notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     # see: https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html
     # see also: https://docs.aws.amazon.com/config/latest/developerguide/example-sns-notification.html
     title = "AWS Config CloudWatch Event."
@@ -291,6 +312,11 @@ def config_cloudwatch_event_notification(message, region):
 
 
 def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing cloudwatch notification", "message": {dumped_message}, "region": {region}, "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
+    )
+
     if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring":
         return (
             prowler_slack_channel,
@@ -301,14 +327,30 @@ def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel)
 
 
 def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
+    logger.info(
+        f'Getting tags for cloudwatch alarm", "alarm_arn": {alarm_arn}, "correlation_id": "{correlation_id}'
+    )
+
     tags = cw_client.list_tags_for_resource(ResourceARN=alarm_arn)
+    logger.info(
+        f'Retrieved tags for cloudwatch alarm", "alarm_arn": {alarm_arn}, "tags": {tags}, "correlation_id": "{correlation_id}'
+    )
     return tags["Tags"] if tags else []
 
 
 def config_custom_cloudwatch_alarm_notification(message, region):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing custom cloudwatch notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
     environment_name = os.environ["AWS_ENVIRONMENT"]
+
+    logger.info(
+        f'Retrieved aws event variables", "slack_channel_main": {slack_channel_main}, "slack_channel_critical": {slack_channel_critical}, "environment_name": {environment_name}, "correlation_id": "{correlation_id}'
+    )
 
     alarm_name = message["AlarmName"]
 
@@ -335,6 +377,10 @@ def config_custom_cloudwatch_alarm_notification(message, region):
     icon = ":warning:"
     slack_channel = slack_channel_main
 
+    logger.info(
+        f'Set slack message variables", "severity": {severity}, "notification_type": {notification_type}, "alarm_name": {alarm_name}, "alarm_url": {alarm_url}, "colour": {colour}, "icon": {icon}, "slack_channel": {slack_channel}, "correlation_id": "{correlation_id}'
+    )
+
     if notification_type.lower() == "information":
         icon = ":information_source:"
         colour = "good"
@@ -348,10 +394,18 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
     title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
+    logger.info(
+        f'Set title", "title": {title}, "correlation_id": "{correlation_id}'
+    )
+
     trigger_time = (
         message["StateUpdatedTimestamp"].strftime(date_format)
         if "StateUpdatedTimestamp" in message
         else "NOT_SET"
+    )
+
+    logger.info(
+        f'Set trigger time", "trigger_time": {trigger_time}, "correlation_id": "{correlation_id}'
     )
 
     return (
@@ -373,6 +427,11 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
 
 def config_prowler_cloudwatch_alarm_notification(message, region):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing prowler notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
     cloudwatch_metric_filters = {
         #'3.1 Unauthorized API calls': '?UnauthorizedOperation ?AccessDenied',
@@ -465,6 +524,11 @@ def config_prowler_cloudwatch_alarm_notification(message, region):
 
 
 def guardduty_notification(message, region):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing guard duty notification", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     gd_finding_detail_type = message["detail"]["type"]
     gd_finding_detail_service_action_type = message["detail"]["service"]["action"][
         "actionType"
@@ -499,6 +563,11 @@ def guardduty_notification(message, region):
 
 
 def app_notification(slack_message, region):
+    dumped_slack_message = get_escaped_json_string(slack_message)
+    logger.info(
+        f'Processing app notification", "slack_message": {dumped_slack_message}, "correlation_id": "{correlation_id}'
+    )
+
     states = {"INFO": "good", "ERROR": "danger"}
 
     recognised_apps = {
@@ -522,6 +591,11 @@ def app_notification(slack_message, region):
     app_function_message = message["message"]
     title = "[" + app + "] application notification."
 
+    dumped_app_function_message = get_escaped_json_string(app_function_message)
+    logger.info(
+        f'Created app notification", "app_function_message": {dumped_app_function_message}, "correlation_id": "{correlation_id}'
+    )
+
     return {
         "color": states[app_function_message_type],
         "fallback": title,
@@ -539,6 +613,10 @@ def app_notification(slack_message, region):
 
 
 def default_notification(message):
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Processing default notification", "message": {dumped_message}, "correlation_id": "{correlation_id}'
+    )
     return {
         "fallback": "A new message",
         "fields": [{"title": "Message", "value": json.dumps(message), "short": False}],
@@ -550,6 +628,10 @@ def notify_slack(message, region):
 
     if "slack" in message:
         # this is some info from one of our apps, intended for an app-specific slack channel...
+
+        logger.info(
+            f'Processing app event", "correlation_id": "{correlation_id}'
+        )
 
         slack_url = os.environ["APP_INFO_SLACK_WEBHOOK_URL"]
         if not slack_url.startswith("http"):
@@ -564,9 +646,18 @@ def notify_slack(message, region):
             "attachments": [],
         }
 
+        dumped_payload = get_escaped_json_string(payload)
+        logger.info(
+            f'Created initial app slack payload", "payload": {dumped_payload}, "app_slack_url": {slack_url}, "app_slack_channel": {slack_channel}, "app_slack_username": {slack_username}, "correlation_id": "{correlation_id}'
+        )
+
         payload["attachments"].append(app_notification(message, region))
     else:
         # this is a status update from AWS...
+
+        logger.info(
+            f'Processing aws event", "correlation_id": "{correlation_id}'
+        )
 
         slack_url = os.environ["STATUS_SLACK_WEBHOOK_URL"]
 
@@ -581,6 +672,11 @@ def notify_slack(message, region):
             "username": slack_username,
             "attachments": [],
         }
+
+        dumped_payload = get_escaped_json_string(payload)
+        logger.info(
+            f'Created initial slack payload", "payload": {dumped_payload}, "slack_url": {slack_url}, "slack_channel": {slack_channel}, "slack_username": {slack_username}, "correlation_id": "{correlation_id}'
+        )
 
         if "detail-type" in message and message["detail-type"] == "GuardDuty Finding":
             payload["attachments"].append(guardduty_notification(message, region))
@@ -616,9 +712,27 @@ def notify_slack(message, region):
             payload["text"] = "Unidentified notification"
             payload["attachments"].append(default_notification(message))
 
+    dumped_payload = get_escaped_json_string(payload)
+    logger.info(
+        f'Parsed final slack payload", "payload": {dumped_payload}, "slack_url": {slack_url}, "correlation_id": "{correlation_id}'
+    )
+
     data = urllib.parse.urlencode({"payload": json.dumps(payload)}).encode("utf-8")
     req = urllib.request.Request(slack_url)
     urllib.request.urlopen(req, data)
+
+
+def get_escaped_json_string(json_dict):
+    serialized_json_dict = {k: v.isoformat() if type(v) is datetime else v for k, v in json_dict.items()}
+    try:
+        escaped_string = json.dumps(json.dumps(serialized_json_dict))
+    except Exception:
+        try:
+            escaped_string = json.dumps(serialized_json_dict)
+        except Exception:
+            escaped_string = serialized_json_dict
+
+    return escaped_string
 
 
 def lambda_handler(event, context):
@@ -632,10 +746,19 @@ def lambda_handler(event, context):
     # becomes:
     #         "Message": "{\"AlarmName\": \"3.1 Unauthorized API calls\", ...
 
+    dumped_event = get_escaped_json_string(event)
+    logger.info(
+        f'Processing event", "aws_event": {dumped_event}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+
     message = json.loads(event["Records"][0]["Sns"]["Message"])
     region = event["Records"][0]["Sns"]["TopicArn"].split(":")[3]
 
-    print(message)
+    dumped_message = get_escaped_json_string(message)
+    logger.info(
+        f'Parsed message", "message": {dumped_message}, "region": {region}, "correlation_id": "{correlation_id}'
+    )
+    
     notify_slack(message, region)
 
     return message
