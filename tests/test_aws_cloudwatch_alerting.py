@@ -459,26 +459,32 @@ class TestRetriever(unittest.TestCase):
 
         expected_payload = {
             "channel": slack_channel_main,
-            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "fields": [
-                            {
-                                "title": attachment_title_link_field,
-                                "value": expected_cloudwatch_url,
-                            },
-                            {
-                                "title": trigger_time_field_title,
-                                "value": state_updated_timestamp_string,
-                            },
-                            {"title": severity_field_title, "value": "NOT_SET"},
-                            {"title": type_field_title, "value": "NOT_SET"},
-                        ],
+                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
-                }
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{severity_field_title}*: NOT_SET",
+                        },
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -515,26 +521,32 @@ class TestRetriever(unittest.TestCase):
 
         expected_payload = {
             "channel": slack_channel_main,
-            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "fields": [
-                            {
-                                "title": attachment_title_link_field,
-                                "value": expected_cloudwatch_url,
-                            },
-                            {
-                                "title": trigger_time_field_title,
-                                "value": state_updated_timestamp_string,
-                            },
-                            {"title": severity_field_title, "value": "NOT_SET"},
-                            {"title": type_field_title, "value": "NOT_SET"},
-                        ],
+                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
-                }
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{severity_field_title}*: NOT_SET",
+                        },
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -571,26 +583,32 @@ class TestRetriever(unittest.TestCase):
 
         expected_payload = {
             "channel": slack_channel_main,
-            "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "fields": [
-                            {
-                                "title": attachment_title_link_field,
-                                "value": expected_cloudwatch_url,
-                            },
-                            {
-                                "title": trigger_time_field_title,
-                                "value": state_updated_timestamp_string,
-                            },
-                            {"title": severity_field_title, "value": "NOT_SET"},
-                            {"title": type_field_title, "value": "NOT_SET"},
-                        ],
+                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
-                }
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{severity_field_title}*: NOT_SET",
+                        },
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -631,26 +649,35 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
 
     expected_payload = {
         "channel": expected_slack_channel,
-        "text": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
         "blocks": [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "fields": [
-                        {
-                            "title": attachment_title_link_field,
-                            "value": expected_cloudwatch_url,
-                        },
-                        {
-                            "title": trigger_time_field_title,
-                            "value": state_updated_timestamp_string,
-                        },
-                        {"title": severity_field_title, "value": expected_severity},
-                        {"title": type_field_title, "value": expected_type},
-                    ],
+                    "text": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                 },
-            }
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{severity_field_title}*: {expected_severity}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{type_field_title}*: {expected_type}",
+                    },
+                ],
+            },
         ],
     }
 
