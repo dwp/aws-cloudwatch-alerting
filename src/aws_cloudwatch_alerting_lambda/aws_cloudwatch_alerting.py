@@ -744,7 +744,7 @@ def lambda_handler(event, context):
 
     dumped_event = get_escaped_json_string(event)
     logger.info(
-        f'Processing event", "aws_event": {dumped_event}, "region": {region}, "correlation_id": "{correlation_id}'
+        f'Processing event", "aws_event": {dumped_event}, "correlation_id": "{correlation_id}'
     )
 
     message = json.loads(event["Records"][0]["Sns"]["Message"])
