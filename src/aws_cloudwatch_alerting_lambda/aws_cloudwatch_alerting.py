@@ -149,18 +149,22 @@ def config_notification(message, region, payload):
     )
 
     payload["text"] = "AWS Config Compliance Change detected " + config_rule_name
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "AWS Config Compliance Rule [" + config_rule_name + "] has changed from ["
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "AWS Config Compliance Rule ["
+                + config_rule_name
+                + "] has changed from ["
                 + no_emojis[config_old_state]
                 + "] to ["
                 + emojis[config_new_state]
                 + "]\nThis script can't tell if everything is compliant or not. For full details check the AWS Console: "
                 + config_url,
+            },
         }
-    }]
+    ]
     return payload
 
 
@@ -296,20 +300,24 @@ def config_cloudwatch_event_notification(message, region, payload):
         return default_notification(message, payload)
 
     payload["text"] = title
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": value
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": value
                 + "\nFor full details check the AWS Console ["
                 + config_url
                 + "].",
+            },
         }
-    }]
+    ]
     return payload
 
 
-def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel, payload):
+def config_cloudwatch_alarm_notification(
+    message, region, prowler_slack_channel, payload
+):
     dumped_message = get_escaped_json_string(message)
     logger.info(
         f'Processing cloudwatch notification", "message": {dumped_message}, "region": {region}, "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
@@ -403,21 +411,23 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     payload["channel"] = slack_channel
     payload["text"] = title
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "fields": [
-                {"title": "AWS Console link", "value": alarm_url},
-                {
-                    "title": "Trigger time",
-                    "value": trigger_time,
-                },
-                {"title": "Severity", "value": severity},
-                {"title": "Type", "value": notification_type},
-            ],
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "fields": [
+                    {"title": "AWS Console link", "value": alarm_url},
+                    {
+                        "title": "Trigger time",
+                        "value": trigger_time,
+                    },
+                    {"title": "Severity", "value": severity},
+                    {"title": "Type", "value": notification_type},
+                ],
+            },
         }
-    }]
+    ]
     return payload
 
 
@@ -538,11 +548,12 @@ def guardduty_notification(message, region, payload):
     )
 
     payload["text"] = "AWS GuardDuty Finding Type [" + gd_finding_detail_type + "]"
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "Finding of type ["
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Finding of type ["
                 + gd_finding_detail_type
                 + "] due to an action of type ["
                 + gd_finding_detail_service_action_type
@@ -550,9 +561,10 @@ def guardduty_notification(message, region, payload):
                 + gd_finding_detail_resource_type
                 + "].\nFor full details check the AWS Console ["
                 + gd_url
-                + "]."
+                + "].",
+            },
         }
-    }]
+    ]
     return payload
 
 
@@ -589,13 +601,15 @@ def app_notification(slack_message, region, payload):
     )
 
     payload["text"] = title
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": f"{app_function} {app_function_message_type}: {app_function_message}"
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"{app_function} {app_function_message_type}: {app_function_message}",
+            },
         }
-    }]
+    ]
     return payload
 
 
@@ -605,20 +619,15 @@ def default_notification(message, payload):
         f'Processing default notification", "message": {dumped_message}, "correlation_id": "{correlation_id}'
     )
     payload["text"] = "Unidentified notification"
-    payload["blocks"] = [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "A new unindentified message"
-        },
-        "fields": [
-            {
-                "type": "plain_text",
-                "emoji": false,
-                "text": "dumped_message"
-            }
-        ]
-    }]
+    payload["blocks"] = [
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": "A new unindentified message"},
+            "fields": [
+                {"type": "plain_text", "emoji": false, "text": "dumped_message"}
+            ],
+        }
+    ]
     return payload
 
 
@@ -694,7 +703,9 @@ def notify_slack(message, region):
                     message, region, os.environ["AWS_SLACK_CHANNEL_MAIN"], payload
                 )
             else:
-                payload = config_prowler_cloudwatch_alarm_notification(message, region, payload)
+                payload = config_prowler_cloudwatch_alarm_notification(
+                    message, region, payload
+                )
         else:
             payload = default_notification(message, payload)
 
