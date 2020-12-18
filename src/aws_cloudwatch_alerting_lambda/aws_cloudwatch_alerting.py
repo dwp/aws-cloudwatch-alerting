@@ -312,7 +312,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
     alarm_name = message["AlarmName"]
 
-    cw_client = boto3.client("cloudwatch")
+    cw_client = boto3.client("cloudwatch", region_name=region)
     tags = get_tags_for_cloudwatch_alarm(cw_client, message["AlarmArn"])
     severity = next(
         (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]),
