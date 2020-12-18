@@ -348,6 +348,12 @@ def config_custom_cloudwatch_alarm_notification(message, region):
 
     title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
+    trigger_time = (
+        message["StateUpdatedTimestamp"].strftime(date_format)
+        if "StateUpdatedTimestamp" in message
+        else "NOT_SET"
+    )
+
     return (
         slack_channel,
         {
@@ -357,7 +363,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
                 {"title": "AWS Console link", "value": alarm_url},
                 {
                     "title": "Trigger time",
-                    "value": message["StateUpdatedTimestamp"].strftime(date_format),
+                    "value": trigger_time,
                 },
                 {"title": "Severity", "value": severity},
                 {"title": "Type", "value": notification_type},
