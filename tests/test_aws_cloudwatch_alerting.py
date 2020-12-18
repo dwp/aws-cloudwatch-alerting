@@ -13,6 +13,13 @@ from aws_cloudwatch_alerting_lambda import aws_cloudwatch_alerting
 region = "eu-test-2"
 alarm_name = "test_alarm name"
 alarm_arn = "test_alarm_arn"
+attachment_title_link_field = "AWS Console link"
+trigger_time_field_title = "Trigger time"
+severity_field_title = "Severity"
+type_field_title = "Type"
+tag_key_severity = "severity"
+tag_key_type = "notification_type"
+expected_cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
 state_updated_timestamp_string = "2019-12-01T13:04:03Z"
 state_updated_datetime = datetime.strptime(
     state_updated_timestamp_string, "%Y-%m-%dT%H:%M:%SZ"
@@ -24,6 +31,10 @@ aws_environment = "test_environment"
 os.environ["AWS_SLACK_CHANNEL_MAIN"] = slack_channel_main
 os.environ["AWS_SLACK_CHANNEL_CRITICAL"] = slack_channel_critical
 os.environ["AWS_ENVIRONMENT"] = aws_environment
+
+icon_information_source = ":information_source:"
+icon_warning = ":warning:"
+icon_fire = ":fire:"
 
 
 class TestRetriever(unittest.TestCase):
@@ -184,7 +195,7 @@ class TestRetriever(unittest.TestCase):
             "information",
             "low",
             "information",
-            ":information_source:",
+            icon_information_source,
             "good",
             slack_channel_main,
         )
@@ -203,7 +214,7 @@ class TestRetriever(unittest.TestCase):
             "information",
             "medium",
             "information",
-            ":information_source:",
+            icon_information_source,
             "good",
             slack_channel_main,
         )
@@ -222,7 +233,7 @@ class TestRetriever(unittest.TestCase):
             "information",
             "high",
             "information",
-            ":information_source:",
+            icon_information_source,
             "good",
             slack_channel_main,
         )
@@ -241,7 +252,7 @@ class TestRetriever(unittest.TestCase):
             "information",
             "critical",
             "information",
-            ":information_source:",
+            icon_information_source,
             "good",
             slack_channel_main,
         )
@@ -260,7 +271,7 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "low",
             "warning",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_main,
         )
@@ -279,7 +290,7 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "medium",
             "warning",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_main,
         )
@@ -298,7 +309,7 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "high",
             "warning",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_main,
         )
@@ -317,7 +328,7 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "critical",
             "warning",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_critical,
         )
@@ -336,7 +347,7 @@ class TestRetriever(unittest.TestCase):
             "error",
             "low",
             "error",
-            ":fire:",
+            icon_fire,
             "danger",
             slack_channel_main,
         )
@@ -355,7 +366,7 @@ class TestRetriever(unittest.TestCase):
             "error",
             "medium",
             "error",
-            ":fire:",
+            icon_fire,
             "danger",
             slack_channel_main,
         )
@@ -374,7 +385,7 @@ class TestRetriever(unittest.TestCase):
             "error",
             "high",
             "error",
-            ":fire:",
+            icon_fire,
             "danger",
             slack_channel_critical,
         )
@@ -393,7 +404,7 @@ class TestRetriever(unittest.TestCase):
             "error",
             "critical",
             "error",
-            ":fire:",
+            icon_fire,
             "danger",
             slack_channel_critical,
         )
@@ -412,7 +423,7 @@ class TestRetriever(unittest.TestCase):
             None,
             "NOT_SET",
             "NOT_SET",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_main,
         )
@@ -431,7 +442,7 @@ class TestRetriever(unittest.TestCase):
             "test",
             "test",
             "test",
-            ":warning:",
+            icon_warning,
             "warning",
             slack_channel_main,
         )
@@ -469,12 +480,12 @@ class TestRetriever(unittest.TestCase):
             "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "fields": [
                 {
-                    "title": "AWS Console link",
-                    "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
+                    "title": attachment_title_link_field,
+                    "value": expected_cloudwatch_url,
                 },
-                {"title": "Trigger time", "value": state_updated_timestamp_string},
-                {"title": "Severity", "value": "NOT_SET"},
-                {"title": "Type", "value": "NOT_SET"},
+                {"title": trigger_time_field_title, "value": state_updated_timestamp_string},
+                {"title": severity_field_title, "value": "NOT_SET"},
+                {"title": type_field_title, "value": "NOT_SET"},
             ],
         }
         self.assertEqual(actual_slack_channel, slack_channel_main)
@@ -496,8 +507,8 @@ class TestRetriever(unittest.TestCase):
         }
 
         tags = [
-            {"Key": "severity", "Value": ""},
-            {"Key": "notification_type", "Value": ""},
+            {"Key": tag_key_severity, "Value": ""},
+            {"Key": tag_key_type, "Value": ""},
         ]
 
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
@@ -516,12 +527,12 @@ class TestRetriever(unittest.TestCase):
             "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "fields": [
                 {
-                    "title": "AWS Console link",
-                    "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
+                    "title": attachment_title_link_field,
+                    "value": expected_cloudwatch_url,
                 },
-                {"title": "Trigger time", "value": state_updated_timestamp_string},
-                {"title": "Severity", "value": "NOT_SET"},
-                {"title": "Type", "value": "NOT_SET"},
+                {"title": trigger_time_field_title, "value": state_updated_timestamp_string},
+                {"title": severity_field_title, "value": "NOT_SET"},
+                {"title": type_field_title, "value": "NOT_SET"},
             ],
         }
         self.assertEqual(actual_slack_channel, slack_channel_main)
@@ -543,8 +554,8 @@ class TestRetriever(unittest.TestCase):
         }
 
         tags = [
-            {"Key": "severity", "Value": None},
-            {"Key": "notification_type", "Value": None},
+            {"Key": tag_key_severity, "Value": None},
+            {"Key": tag_key_type, "Value": None},
         ]
 
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
@@ -563,12 +574,12 @@ class TestRetriever(unittest.TestCase):
             "fallback": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
             "fields": [
                 {
-                    "title": "AWS Console link",
-                    "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
+                    "title": attachment_title_link_field,
+                    "value": expected_cloudwatch_url,
                 },
-                {"title": "Trigger time", "value": state_updated_timestamp_string},
-                {"title": "Severity", "value": "NOT_SET"},
-                {"title": "Type", "value": "NOT_SET"},
+                {"title": trigger_time_field_title, "value": state_updated_timestamp_string},
+                {"title": severity_field_title, "value": "NOT_SET"},
+                {"title": type_field_title, "value": "NOT_SET"},
             ],
         }
         self.assertEqual(actual_slack_channel, slack_channel_main)
@@ -595,8 +606,8 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     }
 
     tags = [
-        {"Key": "severity", "Value": severity_tag},
-        {"Key": "notification_type", "Value": type_tag},
+        {"Key": tag_key_severity, "Value": severity_tag},
+        {"Key": tag_key_type, "Value": type_tag},
     ]
 
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
@@ -615,12 +626,12 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         "fallback": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
         "fields": [
             {
-                "title": "AWS Console link",
-                "value": "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name",
+                "title": attachment_title_link_field,
+                "value": expected_cloudwatch_url,
             },
-            {"title": "Trigger time", "value": state_updated_timestamp_string},
-            {"title": "Severity", "value": expected_severity},
-            {"title": "Type", "value": expected_type},
+            {"title": trigger_time_field_title, "value": state_updated_timestamp_string},
+            {"title": severity_field_title, "value": expected_severity},
+            {"title": type_field_title, "value": expected_type},
         ],
     }
     self.assertEqual(actual_slack_channel, expected_slack_channel)
