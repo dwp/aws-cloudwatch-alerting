@@ -156,22 +156,22 @@ def config_notification(message, region, payload):
                 "text": "AWS Config Compliance Change detected " + config_rule_name,
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": "AWS Config Compliance Rule ["
-                        + config_rule_name
-                        + "] has changed from ["
-                        + no_emojis[config_old_state]
-                        + "] to ["
-                        + emojis[config_new_state]
-                        + "]\nThis script can't tell if everything is compliant or not. For full details check the AWS Console: "
-                        + config_url
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "AWS Config Compliance Rule ["
+                    + config_rule_name
+                    + "] has changed from ["
+                    + no_emojis[config_old_state]
+                    + "] to ["
+                    + emojis[config_new_state]
+                    + "]\nThis script can't tell if everything is compliant or not. For full details check the AWS Console: "
+                    + config_url,
+                }
+            ],
+        },
     ]
     return payload
 
@@ -315,18 +315,18 @@ def config_cloudwatch_event_notification(message, region, payload):
                 "text": title,
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": value
-                        + "\nFor full details check the AWS Console ["
-                        + config_url
-                        + "]."
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": value
+                    + "\nFor full details check the AWS Console ["
+                    + config_url
+                    + "].",
+                }
+            ],
+        },
     ]
     return payload
 
@@ -434,27 +434,15 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
                 "text": title,
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": f"*AWS Console link*: {alarm_url}"
-				},
-				{
-					"type": "mrkdwn",
-					"text": f"*Trigger time*: {trigger_time}"
-				},
-				{
-					"type": "mrkdwn",
-					"text": f"*Severity*: {severity}"
-				},
-				{
-					"type": "mrkdwn",
-					"text": f"*Type*: {notification_type}"
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
+                {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
+                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
+                {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
+            ],
+        },
     ]
     return payload
 
@@ -549,18 +537,18 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
                 "text": f"{app_function} {app_function_message_type}: {app_function_message}",
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": value
-                        + " For full details check the AWS Console ["
-                        + cloudwatch_log_url
-                        + "]."
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": value
+                    + " For full details check the AWS Console ["
+                    + cloudwatch_log_url
+                    + "].",
+                }
+            ],
+        },
     ]
     return payload
 
@@ -592,23 +580,23 @@ def guardduty_notification(message, region, payload):
                 "text": "AWS GuardDuty Finding Type [" + gd_finding_detail_type + "]",
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": "Finding of type ["
-                        + gd_finding_detail_type
-                        + "] due to an action of type ["
-                        + gd_finding_detail_service_action_type
-                        + "] on a resource of type ["
-                        + gd_finding_detail_resource_type
-                        + "].\nFor full details check the AWS Console ["
-                        + gd_url
-                        + "]."
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "Finding of type ["
+                    + gd_finding_detail_type
+                    + "] due to an action of type ["
+                    + gd_finding_detail_service_action_type
+                    + "] on a resource of type ["
+                    + gd_finding_detail_resource_type
+                    + "].\nFor full details check the AWS Console ["
+                    + gd_url
+                    + "].",
+                }
+            ],
+        },
     ]
     return payload
 
@@ -653,15 +641,15 @@ def app_notification(slack_message, region, payload):
                 "text": title,
             },
         },
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": f"*{app_function} {app_function_message_type}*: {app_function_message}"
-				}
-			]
-		}
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"*{app_function} {app_function_message_type}*: {app_function_message}",
+                }
+            ],
+        },
     ]
     return payload
 
@@ -673,21 +661,15 @@ def default_notification(message, payload):
     )
     payload["blocks"] = [
         {
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Unindentified message"
-			}
-		},
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "plain_text",
-					"text": f"*Dumped message*: {dumped_message}"
-				}
-			]
-		}
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": "Unindentified message"},
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "plain_text", "text": f"*Dumped message*: {dumped_message}"}
+            ],
+        },
     ]
     return payload
 
@@ -711,7 +693,7 @@ def notify_slack(message, region):
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "icon_emoji": icon_emoji if icon_emoji else ":aws:"
+            "icon_emoji": icon_emoji if icon_emoji else ":aws:",
         }
 
         dumped_payload = get_escaped_json_string(payload)
@@ -737,7 +719,7 @@ def notify_slack(message, region):
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "icon_emoji": icon_emoji if icon_emoji else ":aws:"
+            "icon_emoji": icon_emoji if icon_emoji else ":aws:",
         }
 
         dumped_payload = get_escaped_json_string(payload)

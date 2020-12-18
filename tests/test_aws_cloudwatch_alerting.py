@@ -472,22 +472,19 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}"
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}"
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET"
+                            "text": f"*{severity_field_title}*: NOT_SET",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{type_field_title}*: NOT_SET"
-                        }
-                    ]
-                }
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -537,22 +534,19 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}"
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}"
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET"
+                            "text": f"*{severity_field_title}*: NOT_SET",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{type_field_title}*: NOT_SET"
-                        }
-                    ]
-                }
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -602,22 +596,19 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}"
+                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}"
+                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET"
+                            "text": f"*{severity_field_title}*: NOT_SET",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{type_field_title}*: NOT_SET"
-                        }
-                    ]
-                }
+                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                    ],
+                },
             ],
         }
         self.assertEqual(expected_payload, actual_payload)
@@ -671,22 +662,22 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}"
+                        "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}"
+                        "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*{severity_field_title}*: {expected_severity}"
+                        "text": f"*{severity_field_title}*: {expected_severity}",
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*{type_field_title}*: {expected_type}"
-                    }
-                ]
-            }
+                        "text": f"*{type_field_title}*: {expected_type}",
+                    },
+                ],
+            },
         ],
     }
 
