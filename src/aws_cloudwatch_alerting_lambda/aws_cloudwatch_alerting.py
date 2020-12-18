@@ -706,7 +706,7 @@ def notify_slack(message, region):
 
         slack_channel = os.environ["APP_INFO_SLACK_CHANNEL"]
         slack_username = os.environ["APP_INFO_SLACK_USERNAME"]
-        slack_username = os.environ["APP_INFO_SLACK_ICON_EMOJI"]
+        icon_emoji = os.environ["APP_INFO_SLACK_ICON_EMOJI"]
 
         payload = {
             "channel": slack_channel,
