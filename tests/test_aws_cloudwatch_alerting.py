@@ -51,7 +51,7 @@ class TestRetriever(unittest.TestCase):
     ):
         event = {"Namespace": "Prowler/Monitoring"}
         payload = {}
-        return_payload = { "channel": slack_channel_main }
+        return_payload = {"channel": slack_channel_main}
 
         prowler_cw_mock.return_value = return_payload
 
@@ -77,7 +77,7 @@ class TestRetriever(unittest.TestCase):
     ):
         event = {"Namespace": "Test/Monitoring"}
         payload = {}
-        return_payload = { "channel": slack_channel_critical }
+        return_payload = {"channel": slack_channel_critical}
 
         custom_cw_mock.return_value = return_payload
 
@@ -103,7 +103,7 @@ class TestRetriever(unittest.TestCase):
     ):
         event = {"Test": "Test/Monitoring"}
         payload = {}
-        return_payload = { "channel": slack_channel_critical }
+        return_payload = {"channel": slack_channel_critical}
 
         custom_cw_mock.return_value = return_payload
 
@@ -129,7 +129,7 @@ class TestRetriever(unittest.TestCase):
     ):
         event = {"Namespace": ""}
         payload = {}
-        return_payload = { "channel": slack_channel_critical }
+        return_payload = {"channel": slack_channel_critical}
 
         custom_cw_mock.return_value = return_payload
 
@@ -155,7 +155,7 @@ class TestRetriever(unittest.TestCase):
     ):
         event = {"Namespace": None}
         payload = {}
-        return_payload = { "channel": slack_channel_critical }
+        return_payload = {"channel": slack_channel_critical}
 
         custom_cw_mock.return_value = return_payload
 
@@ -450,29 +450,36 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region, {}
+        actual_payload = (
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {}
+            )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
         expected_payload = {
             "channel": slack_channel_main,
             "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "blocks": [{
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "fields": [
-                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
-                        {
-                            "title": trigger_time_field_title,
-                            "value": state_updated_timestamp_string,
-                        },
-                        {"title": severity_field_title, "value": "NOT_SET"},
-                        {"title": type_field_title, "value": "NOT_SET"},
-                    ],
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "fields": [
+                            {
+                                "title": attachment_title_link_field,
+                                "value": expected_cloudwatch_url,
+                            },
+                            {
+                                "title": trigger_time_field_title,
+                                "value": state_updated_timestamp_string,
+                            },
+                            {"title": severity_field_title, "value": "NOT_SET"},
+                            {"title": type_field_title, "value": "NOT_SET"},
+                        ],
+                    },
                 }
-            }]
+            ],
         }
         self.assertEqual(expected_payload, actual_payload)
 
@@ -499,29 +506,36 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region, {}
+        actual_payload = (
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {}
+            )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
         expected_payload = {
             "channel": slack_channel_main,
             "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "blocks": [{
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "fields": [
-                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
-                        {
-                            "title": trigger_time_field_title,
-                            "value": state_updated_timestamp_string,
-                        },
-                        {"title": severity_field_title, "value": "NOT_SET"},
-                        {"title": type_field_title, "value": "NOT_SET"},
-                    ],
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "fields": [
+                            {
+                                "title": attachment_title_link_field,
+                                "value": expected_cloudwatch_url,
+                            },
+                            {
+                                "title": trigger_time_field_title,
+                                "value": state_updated_timestamp_string,
+                            },
+                            {"title": severity_field_title, "value": "NOT_SET"},
+                            {"title": type_field_title, "value": "NOT_SET"},
+                        ],
+                    },
                 }
-            }]
+            ],
         }
         self.assertEqual(expected_payload, actual_payload)
 
@@ -548,29 +562,36 @@ class TestRetriever(unittest.TestCase):
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-        actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-            alarm, region, {}
+        actual_payload = (
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {}
+            )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
         expected_payload = {
             "channel": slack_channel_main,
             "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-            "blocks": [{
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "fields": [
-                        {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
-                        {
-                            "title": trigger_time_field_title,
-                            "value": state_updated_timestamp_string,
-                        },
-                        {"title": severity_field_title, "value": "NOT_SET"},
-                        {"title": type_field_title, "value": "NOT_SET"},
-                    ],
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "fields": [
+                            {
+                                "title": attachment_title_link_field,
+                                "value": expected_cloudwatch_url,
+                            },
+                            {
+                                "title": trigger_time_field_title,
+                                "value": state_updated_timestamp_string,
+                            },
+                            {"title": severity_field_title, "value": "NOT_SET"},
+                            {"title": type_field_title, "value": "NOT_SET"},
+                        ],
+                    },
                 }
-            }]
+            ],
         }
         self.assertEqual(expected_payload, actual_payload)
 
@@ -601,29 +622,36 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
 
-    actual_payload = aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
-        alarm, region, {}
+    actual_payload = (
+        aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+            alarm, region, {}
+        )
     )
     tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
 
     expected_payload = {
         "channel": expected_slack_channel,
         "text": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
-        "blocks": [{
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "fields": [
-                    {"title": attachment_title_link_field, "value": expected_cloudwatch_url},
-                    {
-                        "title": trigger_time_field_title,
-                        "value": state_updated_timestamp_string,
-                    },
-                    {"title": severity_field_title, "value": expected_severity},
-                    {"title": type_field_title, "value": expected_type},
-                ],
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "fields": [
+                        {
+                            "title": attachment_title_link_field,
+                            "value": expected_cloudwatch_url,
+                        },
+                        {
+                            "title": trigger_time_field_title,
+                            "value": state_updated_timestamp_string,
+                        },
+                        {"title": severity_field_title, "value": expected_severity},
+                        {"title": type_field_title, "value": expected_type},
+                    ],
+                },
             }
-        }]
+        ],
     }
 
     self.assertEqual(expected_payload, actual_payload)
