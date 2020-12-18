@@ -2,7 +2,7 @@
 # https://raw.githubusercontent.com/terraform-aws-modules/terraform-aws-notify-slack/659b4aac4aee2ab026d9f117f52a90cfc7ae0cff/functions/notify_slack.py
 # installed by script
 from __future__ import print_function
-import os, boto3, json, base64
+import os, boto3, json, base64, argparse, sys, socket
 import urllib.request, urllib.parse
 import logging
 from datetime import datetime
@@ -11,6 +11,73 @@ from datetime import timedelta
 https_prefix = "https://"
 cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
 date_format = "%Y-%m-%dT%H:%M:%SZ"
+log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
+
+
+# Initialise logging
+def setup_logging(logger_level):
+    """Set the default logger with json output."""
+    the_logger = logging.getLogger()
+    for old_handler in the_logger.handlers:
+        the_logger.removeHandler(old_handler)
+
+    new_handler = logging.StreamHandler(sys.stdout)
+
+    hostname = socket.gethostname()
+
+    json_format = (
+        '{ "timestamp": "%(asctime)s", "log_level": "%(levelname)s", "message": "%(message)s", '
+        f'"environment": "{args.environment}","application": "{args.application}", '
+        f'"module": "%(module)s", "process":"%(process)s", '
+        f'"thread": "[%(thread)s]", "hostname": "{hostname}" }}'
+    )
+
+    new_handler.setFormatter(logging.Formatter(json_format))
+    the_logger.addHandler(new_handler)
+    new_level = logging.getLevelName(logger_level.upper())
+    the_logger.setLevel(new_level)
+
+    if the_logger.isEnabledFor(logging.DEBUG):
+        # Log everything from boto3
+        boto3.set_stream_logger()
+        the_logger.debug(f'Using boto3", "version": "{boto3.__version__}')
+
+    return the_logger
+
+
+def get_parameters():
+    """Define and parse command line args."""
+    parser = argparse.ArgumentParser(
+        description="Send HTME SQS messages for defined or default topics."
+    )
+
+    # Parse command line inputs and set defaults
+    parser.add_argument("--aws-profile", default="default")
+    parser.add_argument("--aws-region", default="eu-west-2")
+    parser.add_argument("--environment", default="NOT_SET", help="Environment value")
+    parser.add_argument("--application", default="NOT_SET", help="Application")
+
+    _args = parser.parse_args()
+
+    # Override arguments with environment variables where set
+    if "AWS_PROFILE" in os.environ:
+        _args.aws_profile = os.environ["AWS_PROFILE"]
+
+    if "AWS_REGION" in os.environ:
+        _args.aws_region = os.environ["AWS_REGION"]
+
+    if "ENVIRONMENT" in os.environ:
+        _args.environment = os.environ["ENVIRONMENT"]
+
+    if "APPLICATION" in os.environ:
+        _args.application = os.environ["APPLICATION"]
+
+    return _args
+
+
+args = get_parameters()
+logger = setup_logging(log_level)
+
 
 # Decrypt encrypted URL with KMS
 def decrypt(encrypted_url):
