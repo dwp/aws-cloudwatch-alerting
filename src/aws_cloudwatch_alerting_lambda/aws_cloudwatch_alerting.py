@@ -371,20 +371,17 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
     )
 
-    colour = "warning"
     icon = ":warning:"
     slack_channel = slack_channel_main
 
     logger.info(
-        f'Set slack message variables", "severity": {severity}, "notification_type": {notification_type}, "alarm_name": {alarm_name}, "alarm_url": {alarm_url}, "colour": {colour}, "icon": {icon}, "slack_channel": {slack_channel}, "correlation_id": "{correlation_id}'
+        f'Set slack message variables", "severity": {severity}, "notification_type": {notification_type}, "alarm_name": {alarm_name}, "alarm_url": {alarm_url}, "icon": {icon}, "slack_channel": {slack_channel}, "correlation_id": "{correlation_id}'
     )
 
     if notification_type.lower() == "information":
         icon = ":information_source:"
-        colour = "good"
     elif notification_type.lower() == "error":
         icon = ":fire:"
-        colour = "danger"
         if severity.lower() == "high" or severity.lower() == "critical":
             slack_channel = slack_channel_critical
     elif severity.lower() == "critical":
