@@ -29,15 +29,6 @@ jobs:
       - name: Generate artifacts directory
         run: mkdir artifacts
 
-      - name: Generate artifacts sub directories
-        working-directory: ./artifacts
-        run: |
-          mkdir common
-          mkdir provisioner_lambda
-          mkdir query_lambda
-          mkdir unreconciled_lambda
-          mkdir resources
-
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
@@ -46,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt -t artifacts
-          cp src/*.py artifacts
+          cp src/aws_cloudwatch_alerting_lambda/*.py artifacts
 
       - name: Produce zip
         working-directory: ./artifacts

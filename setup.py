@@ -6,7 +6,7 @@ setuptools.setup(
     name="aws_cloudwatch_alerting",
     version="0.0.1",
     author="DWP DataWorks",
-    author_email="dataworks@digital.uc.dwp.gov.uk",
+    author_email="48289519+DataWorks-CI@users.noreply.github.com",
     description="A lambda that processed alerts from cloudwatch in to slack",
     long_description="A lambda that processed alerts from cloudwatch in to slack",
     long_description_content_type="text/markdown",
