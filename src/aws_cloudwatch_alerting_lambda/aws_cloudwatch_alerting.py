@@ -229,7 +229,7 @@ def config_cloudwatch_alarm_notification(message, region, prowler_slack_channel)
             prowler_slack_channel,
             config_prowler_cloudwatch_alarm_notification(message, region),
         )
-    
+
     return config_custom_cloudwatch_alarm_notification(message, region)
 
 
@@ -261,10 +261,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
     )
 
     alarm_url = (
-        cloudwatch_url
-        + region
-        + "#s=Alarms&alarm="
-        + alarm_name.replace(" ", "%20")
+        cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
     )
 
     colour = "warning"
@@ -293,9 +290,7 @@ def config_custom_cloudwatch_alarm_notification(message, region):
                 {"title": "AWS Console link", "value": alarm_url},
                 {
                     "title": "Trigger time",
-                    "value": message["StateUpdatedTimestamp"].strftime(
-                        date_format
-                    ),
+                    "value": message["StateUpdatedTimestamp"].strftime(date_format),
                 },
                 {"title": "Severity", "value": severity},
                 {"title": "Type", "value": notification_type},
@@ -329,10 +324,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region):
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
-        cloudwatch_url
-        + region
-        + "#s=Alarms&alarm="
-        + alarm_name.replace(" ", "%20")
+        cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
     )
 
     # ...so let's construct a useful link: back to the cloudwatch log that actually triggered the alarm...
@@ -544,9 +536,9 @@ def notify_slack(message, region):
                 payload["channel"] = channel
                 payload["attachments"].append(attachment)
             else:
-                payload["attachments"].append(config_prowler_cloudwatch_alarm_notification(
-                    message, region
-                ))
+                payload["attachments"].append(
+                    config_prowler_cloudwatch_alarm_notification(message, region)
+                )
         else:
             payload["text"] = "Unidentified notification"
             payload["attachments"].append(default_notification(message))
