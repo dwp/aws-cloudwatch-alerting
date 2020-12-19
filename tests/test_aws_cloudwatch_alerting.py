@@ -26,6 +26,7 @@ tag_key_do_not_alert_before = "do_not_alert_before"
 tag_key_do_not_alert_after = "do_not_alert_after"
 today = date.today()
 now = datetime.now()
+now_string = now.strftime("%H") + ":" + now.strftime("%M")
 expected_cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
 state_updated_timestamp_string = "2019-12-01T13:04:03Z"
 state_updated_datetime = datetime.strptime(
@@ -886,6 +887,102 @@ class TestRetriever(unittest.TestCase):
         expected_result = True
 
         actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_later_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=1))
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_matching_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_time_earlier_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=-1))
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_time_later_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=1))
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_matching_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_earlier_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=-1))
 
         self.assertEqual(expected_result, actual_result)
 

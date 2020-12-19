@@ -383,7 +383,7 @@ def is_alarm_suppressed(tags, today, now):
     )
 
     date_today = today.strftime("%A").lower()
-    time_now = now.strftime("%H%M").lower()
+    time_now = now.strftime("%H%M")
 
     logger.info(
         f'Parsed current date and time", "date_today": "{date_today}", "time_now": "{time_now}", "correlation_id": "{correlation_id}'
@@ -398,14 +398,14 @@ def is_alarm_suppressed(tags, today, now):
             return True
 
     if do_not_alert_before and do_not_alert_before != "NOT_SET":
-        if time_now < do_not_alert_before.replace(":", ""):
+        if int(time_now) < int(do_not_alert_before.replace(":", "")):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_before", "time_now": "{time_now}", "do_not_alert_before": "{do_not_alert_before}", "correlation_id": "{correlation_id}'
             )
             return True
 
     if do_not_alert_after and do_not_alert_after != "NOT_SET":
-        if time_now > do_not_alert_after.replace(":", ""):
+        if int(time_now) > int(do_not_alert_after.replace(":", "")):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_after", "time_now": "{time_now}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
             )
