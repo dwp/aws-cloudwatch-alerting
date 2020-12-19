@@ -350,7 +350,7 @@ def config_cloudwatch_alarm_notification(
     return payload
 
 
-def is_alarm_suppressed(tags):
+def is_alarm_suppressed(tags, today, now):
     if not tags or len(tags) == 0:
         logger.info(
             f'Alarm notification not supressed due to no tags", "tags": "{tags}", "correlation_id": "{correlation_id}'
@@ -374,14 +374,14 @@ def is_alarm_suppressed(tags):
         f'Retrieved tag values", "active_days": "{active_days}", "do_not_alert_before": "{do_not_alert_before}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
     )
 
-    date_today = date.today().strftime('%A').lower()
-    time_now = datetime.now().strftime('%H%M').lower()
+    date_today = today.strftime('%A').lower()
+    time_now = now.strftime('%H%M').lower()
 
     logger.info(
         f'Parsed current date and time", "date_today": "{date_today}", "time_now": "{time_now}", "correlation_id": "{correlation_id}'
     )
 
-    if active_days:
+    if active_days and active_days != "NOT_SET":
         days_array = active_days.lower().split(",")
         if date_today not in days_array:
             logger.info(
@@ -389,14 +389,14 @@ def is_alarm_suppressed(tags):
             )
             return True
 
-    if do_not_alert_before:
+    if do_not_alert_before and do_not_alert_before != "NOT_SET":
         if time_now < do_not_alert_before.replace(":",""):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_before", "time_now": "{time_now}", "do_not_alert_before": "{do_not_alert_before}", "correlation_id": "{correlation_id}'
             )
             return True
 
-    if do_not_alert_after:
+    if do_not_alert_after and do_not_alert_after != "NOT_SET":
         if time_now > do_not_alert_after.replace(":",""):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_after", "time_now": "{time_now}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
@@ -441,7 +441,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     cw_client = boto3.client("cloudwatch", region_name=region)
     tags = get_tags_for_cloudwatch_alarm(cw_client, message["AlarmArn"])
 
-    if is_alarm_suppressed(tags):
+    if is_alarm_suppressed(tags, date.today(), datetime.now()):
         logger.info(
             f'Exiting script normally due to suppressed alarm", "correlation_id": "{correlation_id}'
         )

@@ -7,6 +7,8 @@ import unittest
 import os
 import mock
 from datetime import datetime
+from datetime import timedelta
+from datetime import date
 from unittest.mock import MagicMock
 from aws_cloudwatch_alerting_lambda import aws_cloudwatch_alerting
 
@@ -19,6 +21,11 @@ severity_field_title = "Severity"
 type_field_title = "Type"
 tag_key_severity = "severity"
 tag_key_type = "notification_type"
+tag_key_active_days = "active_days"
+tag_key_do_not_alert_before = "do_not_alert_before"
+tag_key_do_not_alert_after = "do_not_alert_after"
+today = date.today()
+now = datetime.now()
 expected_cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
 state_updated_timestamp_string = "2019-12-01T13:04:03Z"
 state_updated_datetime = datetime.strptime(
@@ -551,7 +558,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
-        suppression_mock.assert_called_once_with(tags)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -619,7 +626,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
-        suppression_mock.assert_called_once_with(tags)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -687,7 +694,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
-        suppression_mock.assert_called_once_with(tags)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -757,6 +764,47 @@ class TestRetriever(unittest.TestCase):
         self.assertEqual(0, pytest_wrapped_e.value.code)
         self.assertEqual(SystemExit, pytest_wrapped_e.type)
 
+    def test_alarm_is_not_suppressed_given_no_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = []
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_none_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = None
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_unrecognised_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_severity, "Value": None},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
@@ -792,7 +840,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         )
     )
     tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
-    suppression_mock.assert_called_once_with(tags)
+    suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
     expected_payload = {
         "channel": expected_slack_channel,
