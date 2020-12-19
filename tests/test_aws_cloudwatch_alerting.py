@@ -7,6 +7,8 @@ import unittest
 import os
 import mock
 from datetime import datetime
+from datetime import timedelta
+from datetime import date
 from unittest.mock import MagicMock
 from aws_cloudwatch_alerting_lambda import aws_cloudwatch_alerting
 
@@ -19,6 +21,12 @@ severity_field_title = "Severity"
 type_field_title = "Type"
 tag_key_severity = "severity"
 tag_key_type = "notification_type"
+tag_key_active_days = "active_days"
+tag_key_do_not_alert_before = "do_not_alert_before"
+tag_key_do_not_alert_after = "do_not_alert_after"
+today = date.today()
+now = datetime.now()
+now_string = now.strftime("%H") + ":" + now.strftime("%M")
 expected_cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
 state_updated_timestamp_string = "2019-12-01T13:04:03Z"
 state_updated_datetime = datetime.strptime(
@@ -44,8 +52,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_cloudwatch_alarm_notification_returns_prowler_config_when_prowler_namespace_present(
         self,
+        suppression_mock,
         custom_cw_mock,
         prowler_cw_mock,
     ):
@@ -70,8 +82,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_cloudwatch_alarm_notification_returns_custom_config_when_non_prowler_namespace_present(
         self,
+        suppression_mock,
         custom_cw_mock,
         prowler_cw_mock,
     ):
@@ -96,8 +112,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_cloudwatch_alarm_notification_returns_custom_config_when_no_namespace_present(
         self,
+        suppression_mock,
         custom_cw_mock,
         prowler_cw_mock,
     ):
@@ -122,8 +142,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_cloudwatch_alarm_notification_returns_custom_config_when_namespace_blank(
         self,
+        suppression_mock,
         custom_cw_mock,
         prowler_cw_mock,
     ):
@@ -148,8 +172,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_cloudwatch_alarm_notification_returns_custom_config_when_namespace_none(
         self,
+        suppression_mock,
         custom_cw_mock,
         prowler_cw_mock,
     ):
@@ -181,13 +209,18 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_information(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "low",
             "information",
             "low",
@@ -198,14 +231,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_information(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "medium",
             "information",
             "medium",
@@ -216,14 +254,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_information(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "high",
             "information",
             "high",
@@ -234,14 +277,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_information(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "critical",
             "information",
             "critical",
@@ -253,13 +301,18 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_warning(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "low",
             "warning",
             "low",
@@ -270,14 +323,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_warning(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "medium",
             "warning",
             "medium",
@@ -288,14 +346,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_warning(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "high",
             "warning",
             "high",
@@ -306,14 +369,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_warning(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "critical",
             "warning",
             "critical",
@@ -324,14 +392,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_low_priority_error(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "low",
             "error",
             "low",
@@ -342,14 +415,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_medium_priority_error(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "medium",
             "error",
             "medium",
@@ -360,14 +438,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_high_priority_error(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "high",
             "error",
             "high",
@@ -378,14 +461,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_right_values_for_critical_priority_error(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "critical",
             "error",
             "critical",
@@ -397,13 +485,18 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_no_tags(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             None,
             None,
             "NOT_SET",
@@ -414,14 +507,19 @@ class TestRetriever(unittest.TestCase):
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
     )
     def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_unrecognised_tags(
         self,
+        suppression_mock,
         tags_mock,
     ):
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
+            suppression_mock,
             "test",
             "test",
             "test",
@@ -433,8 +531,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_missing_tags(
         self,
+        suppression_mock,
         tags_mock,
     ):
         self.maxDiff = None
@@ -449,6 +551,7 @@ class TestRetriever(unittest.TestCase):
 
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
 
         actual_payload = (
             aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
@@ -456,6 +559,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -492,8 +596,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_blank_tags(
         self,
+        suppression_mock,
         tags_mock,
     ):
         self.maxDiff = None
@@ -511,6 +619,7 @@ class TestRetriever(unittest.TestCase):
 
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
 
         actual_payload = (
             aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
@@ -518,6 +627,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -554,8 +664,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
     def test_config_custom_cloudwatch_alarm_notification_returns_default_values_for_none_tags(
         self,
+        suppression_mock,
         tags_mock,
     ):
         self.maxDiff = None
@@ -573,6 +687,7 @@ class TestRetriever(unittest.TestCase):
 
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
         aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
 
         actual_payload = (
             aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
@@ -580,6 +695,7 @@ class TestRetriever(unittest.TestCase):
             )
         )
         tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
             "channel": slack_channel_main,
@@ -613,10 +729,276 @@ class TestRetriever(unittest.TestCase):
         }
         self.assertEqual(expected_payload, actual_payload)
 
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_cloudwatch_alarm_notification_exits_when_suppressed(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        self.maxDiff = None
+
+        alarm = {
+            "AlarmName": alarm_name,
+            "AlarmArn": alarm_arn,
+            "StateUpdatedTimestamp": state_updated_datetime,
+        }
+
+        tags = [
+            {"Key": tag_key_severity, "Value": None},
+            {"Key": tag_key_type, "Value": None},
+        ]
+
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = True
+
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {}
+            )
+
+        self.assertEqual(0, pytest_wrapped_e.value.code)
+        self.assertEqual(SystemExit, pytest_wrapped_e.type)
+
+    def test_alarm_is_not_suppressed_given_no_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = []
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_none_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = None
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_unrecognised_tags(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_severity, "Value": None},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_days_tag_with_one_day(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_active_days, "Value": today.strftime("%A")},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_days_tag_with_multiple_days(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": f"Saturday,Wednesday,{today.strftime('%A')}",
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_days_tag_regardless_of_case(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_active_days, "Value": today.strftime("%A").upper()},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_with_one_day(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": (today + timedelta(days=1)).strftime("%A"),
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_regardless_of_case(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": (today + timedelta(days=1)).strftime("%A").upper(),
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_with_multiple_days(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": f"{(today + timedelta(days=1)).strftime('%A')},{(today + timedelta(days=2)).strftime('%A')}",
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_later_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=1)
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_matching_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_time_earlier_than_now_do_not_alert_before_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_before,
+                "Value": now_string,
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=-1)
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_time_later_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=1)
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_matching_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_time_earlier_than_now_do_not_alert_after_time(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_do_not_alert_after,
+                "Value": now_string,
+            },
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=-1)
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
     tags_mock,
+    suppression_mock,
     severity_tag,
     type_tag,
     expected_severity,
@@ -639,6 +1021,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
 
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
     aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+    aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
 
     actual_payload = (
         aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
@@ -646,6 +1029,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         )
     )
     tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+    suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
     expected_payload = {
         "channel": expected_slack_channel,
