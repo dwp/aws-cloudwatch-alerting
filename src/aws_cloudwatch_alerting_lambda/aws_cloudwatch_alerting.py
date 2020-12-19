@@ -4,9 +4,11 @@
 from __future__ import print_function
 import os, boto3, json, base64, argparse, sys, socket, uuid
 import urllib.request, urllib.parse
+import sys
 import logging
 from datetime import datetime
 from datetime import timedelta
+from datetime import date
 
 https_prefix = "https://"
 cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
@@ -348,6 +350,66 @@ def config_cloudwatch_alarm_notification(
     return payload
 
 
+def is_alarm_suppressed(tags):
+    if not tags or len(tags) == 0:
+        logger.info(
+            f'Alarm notification not supressed due to no tags", "tags": "{tags}", "correlation_id": "{correlation_id}'
+        )
+        return False
+
+    active_days = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "active_days" and tag["Value"]),
+        "NOT_SET",
+    )
+    do_not_alert_before = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "do_not_alert_before" and tag["Value"]),
+        "NOT_SET",
+    )
+    do_not_alert_after = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "do_not_alert_after" and tag["Value"]),
+        "NOT_SET",
+    )
+
+    logger.info(
+        f'Retrieved tag values", "active_days": "{active_days}", "do_not_alert_before": "{do_not_alert_before}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
+    )
+
+    date_today = date.today().strftime('%A').lower()
+    time_now = datetime.now().strftime('%H%M').lower()
+
+    logger.info(
+        f'Parsed current date and time", "date_today": "{date_today}", "time_now": "{time_now}", "correlation_id": "{correlation_id}'
+    )
+
+    if active_days:
+        days_array = active_days.lower().split(",")
+        if date_today not in days_array:
+            logger.info(
+                f'Alarm notification supressed due to active_days", "date_today": "{date_today}", "active_days": "{active_days}", "correlation_id": "{correlation_id}'
+            )
+            return True
+
+    if do_not_alert_before:
+        if time_now < do_not_alert_before.replace(":",""):
+            logger.info(
+                f'Alarm notification supressed due to do_not_alert_before", "time_now": "{time_now}", "do_not_alert_before": "{do_not_alert_before}", "correlation_id": "{correlation_id}'
+            )
+            return True
+
+    if do_not_alert_after:
+        if time_now > do_not_alert_after.replace(":",""):
+            logger.info(
+                f'Alarm notification supressed due to do_not_alert_after", "time_now": "{time_now}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
+            )
+            return True
+
+    logger.info(
+        f'Alarm notification not supressed due to tag values", "tags": "{tags}", "correlation_id": "{correlation_id}'
+    )
+
+    return False
+
+
 def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
     logger.info(
         f'Getting tags for cloudwatch alarm", "alarm_arn": "{alarm_arn}", "correlation_id": "{correlation_id}'
@@ -378,6 +440,13 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     cw_client = boto3.client("cloudwatch", region_name=region)
     tags = get_tags_for_cloudwatch_alarm(cw_client, message["AlarmArn"])
+
+    if is_alarm_suppressed(tags):
+        logger.info(
+            f'Exiting script normally due to suppressed alarm", "correlation_id": "{correlation_id}'
+        )
+        sys.exit(0)
+
     severity = next(
         (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]),
         "NOT_SET",
