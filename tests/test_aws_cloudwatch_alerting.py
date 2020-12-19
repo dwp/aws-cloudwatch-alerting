@@ -771,9 +771,7 @@ class TestRetriever(unittest.TestCase):
         tags = []
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
@@ -784,9 +782,7 @@ class TestRetriever(unittest.TestCase):
         tags = None
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
@@ -799,9 +795,7 @@ class TestRetriever(unittest.TestCase):
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
@@ -810,13 +804,11 @@ class TestRetriever(unittest.TestCase):
     ):
         self.maxDiff = None
         tags = [
-            {"Key": tag_key_active_days, "Value": today.strftime('%A')},
+            {"Key": tag_key_active_days, "Value": today.strftime("%A")},
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
@@ -825,13 +817,14 @@ class TestRetriever(unittest.TestCase):
     ):
         self.maxDiff = None
         tags = [
-            {"Key": tag_key_active_days, "Value": f"Saturday,Wednesday,{today.strftime('%A')}"},
+            {
+                "Key": tag_key_active_days,
+                "Value": f"Saturday,Wednesday,{today.strftime('%A')}",
+            },
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
@@ -840,13 +833,59 @@ class TestRetriever(unittest.TestCase):
     ):
         self.maxDiff = None
         tags = [
-            {"Key": tag_key_active_days, "Value": today.strftime('%A').upper()},
+            {"Key": tag_key_active_days, "Value": today.strftime("%A").upper()},
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_with_one_day(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": (today + timedelta(days=1)).strftime("%A"),
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_regardless_of_case(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": (today + timedelta(days=1)).strftime("%A").upper(),
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_suppressed_given_valid_days_without_today_with_multiple_days(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {
+                "Key": tag_key_active_days,
+                "Value": f"{(today + timedelta(days=1)).strftime('%A')},{(today + timedelta(days=2)).strftime('%A')}",
+            },
+        ]
+        expected_result = True
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
