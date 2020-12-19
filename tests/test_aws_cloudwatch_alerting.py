@@ -805,6 +805,51 @@ class TestRetriever(unittest.TestCase):
 
         self.assertEqual(expected_result, actual_result)
 
+    def test_alarm_is_not_suppressed_given_valid_days_tag_with_one_day(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_active_days, "Value": today.strftime('%A')},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_days_tag_with_multiple_days(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_active_days, "Value": f"Saturday,Wednesday,{today.strftime('%A')}"},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
+    def test_alarm_is_not_suppressed_given_valid_days_tag_regardless_of_case(
+        self,
+    ):
+        self.maxDiff = None
+        tags = [
+            {"Key": tag_key_active_days, "Value": today.strftime('%A').upper()},
+        ]
+        expected_result = False
+
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now
+        )
+
+        self.assertEqual(expected_result, actual_result)
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
