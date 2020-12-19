@@ -902,7 +902,9 @@ class TestRetriever(unittest.TestCase):
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=1))
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=1)
+        )
 
         self.assertEqual(expected_result, actual_result)
 
@@ -934,7 +936,9 @@ class TestRetriever(unittest.TestCase):
         ]
         expected_result = True
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=-1))
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=-1)
+        )
 
         self.assertEqual(expected_result, actual_result)
 
@@ -950,7 +954,9 @@ class TestRetriever(unittest.TestCase):
         ]
         expected_result = True
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=1))
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=1)
+        )
 
         self.assertEqual(expected_result, actual_result)
 
@@ -982,7 +988,9 @@ class TestRetriever(unittest.TestCase):
         ]
         expected_result = False
 
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now + timedelta(minutes=-1))
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
+            tags, today, now + timedelta(minutes=-1)
+        )
 
         self.assertEqual(expected_result, actual_result)
 
