@@ -19,6 +19,9 @@ attachment_title_link_field = "AWS Console link"
 trigger_time_field_title = "Trigger time"
 severity_field_title = "Severity"
 type_field_title = "Type"
+active_days_field_title = "Active days"
+skip_before_field_title = "Suppress before"
+skip_after_field_title = "Suppress after"
 tag_key_severity = "severity"
 tag_key_type = "notification_type"
 tag_key_active_days = "active_days"
@@ -225,6 +228,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "low",
             "information",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_information_source,
             slack_channel_main,
         )
@@ -248,6 +254,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "medium",
             "information",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_information_source,
             slack_channel_main,
         )
@@ -271,6 +280,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "high",
             "information",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_information_source,
             slack_channel_main,
         )
@@ -294,6 +306,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "critical",
             "information",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_information_source,
             slack_channel_main,
         )
@@ -317,6 +332,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "low",
             "warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_warning,
             slack_channel_main,
         )
@@ -340,6 +358,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "medium",
             "warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_warning,
             slack_channel_main,
         )
@@ -363,6 +384,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "high",
             "warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_warning,
             slack_channel_main,
         )
@@ -386,6 +410,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "critical",
             "warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_warning,
             slack_channel_critical,
         )
@@ -409,6 +436,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "low",
             "error",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_fire,
             slack_channel_main,
         )
@@ -432,6 +462,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "medium",
             "error",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_fire,
             slack_channel_main,
         )
@@ -455,6 +488,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "high",
             "error",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_fire,
             slack_channel_critical,
         )
@@ -478,6 +514,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "critical",
             "error",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_fire,
             slack_channel_critical,
         )
@@ -499,6 +538,9 @@ class TestRetriever(unittest.TestCase):
             suppression_mock,
             None,
             None,
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             "NOT_SET",
             "NOT_SET",
             icon_warning,
@@ -524,6 +566,9 @@ class TestRetriever(unittest.TestCase):
             "test",
             "test",
             "test",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
             icon_warning,
             slack_channel_main,
         )
@@ -562,13 +607,14 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                        "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
                 },
                 {
@@ -587,6 +633,9 @@ class TestRetriever(unittest.TestCase):
                             "text": f"*{severity_field_title}*: NOT_SET",
                         },
                         {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{active_days_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_before_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_after_field_title}*: NOT_SET"},
                     ],
                 },
             ],
@@ -630,13 +679,14 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                        "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
                 },
                 {
@@ -655,6 +705,9 @@ class TestRetriever(unittest.TestCase):
                             "text": f"*{severity_field_title}*: NOT_SET",
                         },
                         {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{active_days_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_before_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_after_field_title}*: NOT_SET"},
                     ],
                 },
             ],
@@ -698,13 +751,14 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f':warning: *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                        "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                     },
                 },
                 {
@@ -723,6 +777,9 @@ class TestRetriever(unittest.TestCase):
                             "text": f"*{severity_field_title}*: NOT_SET",
                         },
                         {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{active_days_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_before_field_title}*: NOT_SET"},
+                        {"type": "mrkdwn", "text": f"*{skip_after_field_title}*: NOT_SET"},
                     ],
                 },
             ],
@@ -1003,6 +1060,9 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     type_tag,
     expected_severity,
     expected_type,
+    expected_active_days,
+    expected_skip_before,
+    expected_skip_after,
     expected_icon,
     expected_slack_channel,
 ):
@@ -1032,13 +1092,14 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
     expected_payload = {
+        "icon_emoji": expected_icon,
         "channel": expected_slack_channel,
         "blocks": [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f'{expected_icon} *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                    "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
                 },
             },
             {
@@ -1059,6 +1120,18 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                     {
                         "type": "mrkdwn",
                         "text": f"*{type_field_title}*: {expected_type}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{active_days_field_title}*: {expected_active_days}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{skip_before_field_title}*: {expected_skip_before}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{skip_after_field_title}*: {expected_skip_after}",
                     },
                 ],
             },
