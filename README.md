@@ -54,7 +54,7 @@ If the message has the `AlarmName` field it is a cloudwatch alarm notification. 
 
 #### Prowler alarms
 
-If the message has the `Namespace` field and its value is set to `Prowler/Monitoring` then the message is assumed to be from the Prowler monitoring that is set up. In this case, the message is processed with a title of the name of the monitoring alert triggered an a URL to go to the alert directly is generated and set in the slack message.
+If the message has the `Namespace` field and its value is set to `Prowler/Monitoring` then the message is assumed to be from the Prowler monitoring that is set up. In this case, the message is processed with a title of the name of the monitoring alert triggered and a URL to go to the alert directly is generated and set in the slack message.
 
 #### Custom alarms
 
@@ -70,9 +70,9 @@ The icon is set from the severity and the type of notification. These values als
 
 The following tags are retrieved from the cloudwatch alarm and each one has a default in case it is not present:
 
-* `severity` -> this is used to determine the icon used for the alarm and the channel it goes to, supported values are `Low`, `Medium`, `High` and `Critical`. Default is `Medium`
+* `severity` -> a combination of this and `notification_type` are used to determine the icon used for the alarm and the channel it goes to (see `Environment variables` section for details), supported values are `Low`, `Medium`, `High` and `Critical`. Default is `Medium`
 
-* `notification_type` -> this is used to determine the icon used for the alarm and the channel it goes to, supported values are `Information`, `Warning` and `Error`. Default is `Warning`
+* `notification_type` -> a combination of this and `severity` are used to determine the icon used for the alarm and the channel it goes to (see `Environment variables` section for details), supported values are `Information`, `Warning` and `Error`. Default is `Warning`
 
 * `active_days` -> if set, this will mean any alarm on a day that is not present in this list will be suppressed and no notification will be sent to slack. The format is a comma delimited list of ini-capped weekday names, i.e. `Monday,Tuesday`. Default is `NOT_SET`
 
