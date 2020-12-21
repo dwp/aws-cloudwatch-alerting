@@ -74,7 +74,7 @@ The following tags are retrieved from the cloudwatch alarm and each one has a de
 
 * `notification_type` -> a combination of this and `severity` are used to determine the icon used for the alarm and the channel it goes to (see `Environment variables` section for details), supported values are `Information`, `Warning` and `Error`. Default is `Warning`
 
-* `active_days` -> if set, this will mean any alarm on a day that is not present in this list will be suppressed and no notification will be sent to slack. The format is a comma delimited list of ini-capped weekday names, i.e. `Monday,Tuesday`. Default is `NOT_SET`
+* `active_days` -> if set, this will mean any alarm on a day that is not present in this list will be suppressed and no notification will be sent to slack. The format is a `+` delimited list of ini-capped weekday names, i.e. `Monday+Tuesday`. Default is `NOT_SET`
 
 * `do_not_alert_before` -> if set, this will mean any alarm which is triggered before the given time will be suppressed and no notification will be sent to slack. The format supported is `HH:MM` or `HHMM`. Default is `NOT_SET`
 
