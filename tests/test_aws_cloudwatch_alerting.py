@@ -42,7 +42,6 @@ aws_environment = "test_environment"
 os.environ["AWS_SLACK_CHANNEL_MAIN"] = slack_channel_main
 os.environ["AWS_SLACK_CHANNEL_CRITICAL"] = slack_channel_critical
 os.environ["AWS_ENVIRONMENT"] = aws_environment
-os.environ["AWS_LOG_CRITICAL_WITH_HERE"] = "true"
 
 icon_information_source = ":information_source:"
 icon_warning = ":warning:"
@@ -403,6 +402,8 @@ class TestRetriever(unittest.TestCase):
         suppression_mock,
         tags_mock,
     ):
+        os.environ["AWS_LOG_CRITICAL_WITH_HERE"] = ""
+
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
@@ -481,6 +482,8 @@ class TestRetriever(unittest.TestCase):
         suppression_mock,
         tags_mock,
     ):
+        os.environ["AWS_LOG_CRITICAL_WITH_HERE"] = ""
+
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
@@ -507,6 +510,8 @@ class TestRetriever(unittest.TestCase):
         suppression_mock,
         tags_mock,
     ):
+        os.environ["AWS_LOG_CRITICAL_WITH_HERE"] = "true"
+
         custom_cloudwatch_alarm_notification_returns_right_values(
             self,
             tags_mock,
@@ -520,6 +525,7 @@ class TestRetriever(unittest.TestCase):
             "NOT_SET",
             icon_fire,
             slack_channel_critical,
+            True
         )
 
     @mock.patch(
@@ -1071,8 +1077,8 @@ class TestRetriever(unittest.TestCase):
                 "Value": now_string,
             },
         ]
-        expected_result = False
 
+        expected_result = False
         actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
             tags, today, now + timedelta(minutes=-1)
         )
@@ -1093,6 +1099,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     expected_skip_after,
     expected_icon,
     expected_slack_channel,
+    expected_here_tag=False,
 ):
     self.maxDiff = None
 
@@ -1120,7 +1127,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
     expected_title = '*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
-    if expected_slack_channel == slack_channel_critical:
+    if expected_here_tag:
         expected_title = '@here *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
 
     expected_payload = {
