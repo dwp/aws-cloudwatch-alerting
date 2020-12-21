@@ -439,9 +439,14 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
     environment_name = os.environ["AWS_ENVIRONMENT"]
+    log_critical_with_here = (
+        os.environ["AWS_LOG_CRITICAL_WITH_HERE"]
+        if "AWS_LOG_CRITICAL_WITH_HERE" in os.environ
+        else "NOT_SET"
+    )
 
     logger.info(
-        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", "slack_channel_critical": "{slack_channel_critical}", "environment_name": "{environment_name}", "correlation_id": "{correlation_id}'
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", "slack_channel_critical": "{slack_channel_critical}", "slack_channel_main": "{slack_channel_main}", "log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
     )
 
     alarm_name = message["AlarmName"]
@@ -467,12 +472,33 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         ),
         "NOT_SET",
     )
+    active_days = next(
+        (tag["Value"] for tag in tags if tag["Key"] == "active_days" and tag["Value"]),
+        "NOT_SET",
+    )
+    do_not_alert_before = next(
+        (
+            tag["Value"]
+            for tag in tags
+            if tag["Key"] == "do_not_alert_before" and tag["Value"]
+        ),
+        "NOT_SET",
+    )
+    do_not_alert_after = next(
+        (
+            tag["Value"]
+            for tag in tags
+            if tag["Key"] == "do_not_alert_after" and tag["Value"]
+        ),
+        "NOT_SET",
+    )
 
     alarm_url = (
         cloudwatch_url + region + "#s=Alarms&alarm=" + alarm_name.replace(" ", "%20")
     )
 
     icon = ":warning:"
+    here = ""
     slack_channel = slack_channel_main
 
     logger.info(
@@ -488,7 +514,14 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     elif severity.lower() == "critical":
         slack_channel = slack_channel_critical
 
-    title = f'{icon} *{environment_name.upper()}*: "_{alarm_name}_" in {region}'
+    if (
+        slack_channel == slack_channel_critical
+        and log_critical_with_here
+        and log_critical_with_here.lower() == "true"
+    ):
+        here = "@here "
+
+    title = f'{here}*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
@@ -502,6 +535,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         f'Set trigger time", "trigger_time": "{trigger_time}", "correlation_id": "{correlation_id}'
     )
 
+    payload["icon_emoji"] = icon
     payload["channel"] = slack_channel
     payload["blocks"] = [
         {
@@ -518,6 +552,9 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
                 {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
                 {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
                 {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
+                {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
+                {"type": "mrkdwn", "text": f"*Suppress before*: {do_not_alert_before}"},
+                {"type": "mrkdwn", "text": f"*Suppress after*: {do_not_alert_after}"},
             ],
         },
     ]
@@ -824,7 +861,7 @@ def notify_slack(message, region):
         elif "AlarmName" in message:
             if os.environ["USE_AWS_SLACK_CHANNELS"].lower() == "true":
                 payload = config_cloudwatch_alarm_notification(
-                    message, region, os.environ["AWS_SLACK_CHANNEL_MAIN"], payload
+                    message, region, os.environ["AWS_SLACK_CHANNEL_PROWLER"], payload
                 )
             else:
                 payload = config_prowler_cloudwatch_alarm_notification(

@@ -95,7 +95,9 @@ If `USE_AWS_SLACK_CHANNELS` is set to `true` then the following variables must a
 
 * `AWS_SLACK_CHANNEL_MAIN` (required if `USE_AWS_SLACK_CHANNELS` is `true`) -> The slack channel to send all Prowler messages, custom `Information` notifications, custom `Warning` notifications that are not `Critical` severity and custom `Error` notifications that are not `High` or `Critical` severity
 * `AWS_SLACK_CHANNEL_CRITICAL` (required if `USE_AWS_SLACK_CHANNELS` is `true`) -> The slack channel to send all custom `Warning` notifications that are `Critical` severity and custom `Error` notifications that are `High` or `Critical` severity
+* `AWS_SLACK_CHANNEL_PROWLER` (required if `USE_AWS_SLACK_CHANNELS` is `true`) -> Where all prowler messages will be sent to
 * `AWS_ENVIRONMENT` (required if `USE_AWS_SLACK_CHANNELS` is `true`) -> The environment name the AWS alarms will be coming from, should be a human readable name
+* `AWS_LOG_CRITICAL_WITH_HERE` (optional) -> If passed as `true` then a `@here` is added to notifications sent to `AWS_SLACK_CHANNEL_CRITICAL`
 
 If this application is going to be used to receive anything other than `app` or `custom cloudwatch alarm` notification types (see above) then the following must also be provided for it to work
 
