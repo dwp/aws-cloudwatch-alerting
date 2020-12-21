@@ -525,7 +525,7 @@ class TestRetriever(unittest.TestCase):
             "NOT_SET",
             icon_fire,
             slack_channel_critical,
-            True
+            True,
         )
 
     @mock.patch(
