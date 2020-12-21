@@ -7,13 +7,13 @@ The lambda reacts to given SNS messages, looks at the payload and generates a sl
 
 ## Message structure
 
-The lambda will react to alerts sent from SNS to whatever topics it is subscribed to. The SNS message stucture can be found at https://docs.aws.amazon.com/lambda/latest/dg/with-sns.html.
+The lambda will react to alerts sent from SNS to whatever topics it is subscribed to. The SNS message structure can be found at https://docs.aws.amazon.com/lambda/latest/dg/with-sns.html.
 
 ## Different message types
 
 The app will look at the message payload (`$.Records[0].SNS.Message`) and react differently depending on different fields that are present. These scenarios are desribed below.
 
-If none of these scenarios are matched, then there is a fallback scenario which will which send a message with the phrase `Unindentified message` as the title the dumped payload as well.
+If none of these scenarios are matched, then there is a fallback scenario which will which send a message with the phrase `Unidentified message` as the title the dumped payload as well.
 
 ### App notifications
 
@@ -38,15 +38,15 @@ The list of recognised apps is:
 
 ### Guard duty notifications
 
-If the message has the `detail-type` field and the field contains `GuardDuty Finding` it is a guard duty notification. If this is the case then a notification is logged with the text `AWS GuardDuty Finding Type` and a URL is consructed to go directly to the finding in the AWS console.
+If the message has the `detail-type` field and the field contains `GuardDuty Finding` it is a guard duty notification. If this is the case then a notification is logged with the text `AWS GuardDuty Finding Type` and a URL is constructed to go directly to the finding in the AWS console.
 
 ### Configuration notifications
 
-If the message has the `configRuleName` field it is a configuration notification. If this is the case then a notification is logged with the text `AWS Config Compliance Change detected` and a URL is consructed to go directly to the finding in the AWS console.
+If the message has the `configRuleName` field it is a configuration notification. If this is the case then a notification is logged with the text `AWS Config Compliance Change detected` and a URL is constructed to go directly to the finding in the AWS console.
 
 ### Cloudwatch event notifications
 
-If the message has the `messageType` field it is a cloudwatch event notification. If this is the case then a notification is logged with the text `AWS Config CloudWatch Event` and a URL is consructed to go directly to the finding in the AWS console. Details of the event are pulled out and provided as extra information in the slack message.
+If the message has the `messageType` field it is a cloudwatch event notification. If this is the case then a notification is logged with the text `AWS Config CloudWatch Event` and a URL is constructed to go directly to the finding in the AWS console. Details of the event are pulled out and provided as extra information in the slack message.
 
 ### Cloudwatch alarm notifications
 
