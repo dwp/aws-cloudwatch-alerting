@@ -911,7 +911,7 @@ class TestRetriever(unittest.TestCase):
         tags = [
             {
                 "Key": tag_key_active_days,
-                "Value": f"Saturday,Wednesday,{today.strftime('%A')}",
+                "Value": f"Saturday+Wednesday+{today.strftime('%A')}",
             },
         ]
         expected_result = False
@@ -972,7 +972,7 @@ class TestRetriever(unittest.TestCase):
         tags = [
             {
                 "Key": tag_key_active_days,
-                "Value": f"{(today + timedelta(days=1)).strftime('%A')},{(today + timedelta(days=2)).strftime('%A')}",
+                "Value": f"{(today + timedelta(days=1)).strftime('%A')}+{(today + timedelta(days=2)).strftime('%A')}",
             },
         ]
         expected_result = True

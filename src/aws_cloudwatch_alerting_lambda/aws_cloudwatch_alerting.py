@@ -390,7 +390,7 @@ def is_alarm_suppressed(tags, today, now):
     )
 
     if active_days and active_days != "NOT_SET":
-        days_array = active_days.lower().split(",")
+        days_array = active_days.lower().split("+")
         if date_today not in days_array:
             logger.info(
                 f'Alarm notification supressed due to active_days", "date_today": "{date_today}", "active_days": "{active_days}", "correlation_id": "{correlation_id}'
