@@ -42,6 +42,7 @@ aws_environment = "test_environment"
 os.environ["AWS_SLACK_CHANNEL_MAIN"] = slack_channel_main
 os.environ["AWS_SLACK_CHANNEL_CRITICAL"] = slack_channel_critical
 os.environ["AWS_ENVIRONMENT"] = aws_environment
+os.environ["AWS_LOG_CRITICAL_WITH_HERE"] = "true"
 
 icon_information_source = ":information_source:"
 icon_warning = ":warning:"
@@ -1091,6 +1092,10 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
     suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
+    expected_title = '*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
+    if expected_slack_channel == slack_channel_critical:
+        expected_title = '@here *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
+
     expected_payload = {
         "icon_emoji": expected_icon,
         "channel": expected_slack_channel,
@@ -1099,7 +1104,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                    "text": expected_title,
                 },
             },
             {

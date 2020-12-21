@@ -439,9 +439,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
     environment_name = os.environ["AWS_ENVIRONMENT"]
+    log_critical_with_here = os.environ["AWS_LOG_CRITICAL_WITH_HERE"] if "AWS_LOG_CRITICAL_WITH_HERE" in os.environ else "NOT_SET"
 
     logger.info(
-        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", "slack_channel_critical": "{slack_channel_critical}", "environment_name": "{environment_name}", "correlation_id": "{correlation_id}'
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", "slack_channel_critical": "{slack_channel_critical}", "slack_channel_main": "{slack_channel_main}", "log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
     )
 
     alarm_name = message["AlarmName"]
@@ -493,6 +494,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     icon = ":warning:"
+    here = ""
     slack_channel = slack_channel_main
 
     logger.info(
@@ -507,8 +509,11 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             slack_channel = slack_channel_critical
     elif severity.lower() == "critical":
         slack_channel = slack_channel_critical
+    
+    if slack_channel == slack_channel_critical and log_critical_with_here and log_critical_with_here.lower() == "true":
+        here = "@here "
 
-    title = f'*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
+    title = f'{here}*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
