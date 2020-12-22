@@ -618,16 +618,6 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     cloudwatch_logs_search_start_datetime_object = (
         cloudwatch_logs_search_end_datetime_object + timedelta(minutes=-15)
     )
-    trigger_namespace = message["Trigger"]["Namespace"]
-    value = (
-        "["
-        + trigger_namespace
-        + "] alarm ["
-        + alarm_name
-        + "] triggered at ["
-        + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
-        + "]."
-    )
 
     trigger_time = (
         message["StateChangeTime"].strftime(date_format)
