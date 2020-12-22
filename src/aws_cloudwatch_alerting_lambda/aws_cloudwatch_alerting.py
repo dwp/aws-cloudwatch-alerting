@@ -338,10 +338,12 @@ def config_cloudwatch_alarm_notification(
 ):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing cloudwatch notification", "message": "{dumped_message}", "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
+        f'Processing cloudwatch notification", "dumped_message": "{dumped_message}", "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
     )
 
-    if "Namespace" in message and message["Namespace"] == "Prowler/Monitoring":
+    trigger_object = message["Trigger"] if "Trigger" in message else None
+
+    if trigger_object is not None and "Namespace" in trigger_object and trigger_object["Namespace"] == "Prowler/Monitoring":
         payload = config_prowler_cloudwatch_alarm_notification(message, region, payload)
         payload["channel"] = prowler_slack_channel
     else:
@@ -526,8 +528,8 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     trigger_time = (
-        message["StateUpdatedTimestamp"].strftime(date_format)
-        if "StateUpdatedTimestamp" in message
+        message["StateChangeTime"].strftime(date_format)
+        if "StateChangeTime" in message
         else "NOT_SET"
     )
 
@@ -535,29 +537,40 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         f'Set trigger time", "trigger_time": "{trigger_time}", "correlation_id": "{correlation_id}'
     )
 
-    payload["icon_emoji"] = icon
     payload["channel"] = slack_channel
-    payload["blocks"] = [
-        {
+    blocks = []
+    blocks.append({
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": title,
             },
-        },
-        {
-            "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
-                {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
-                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
-                {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
-                {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
-                {"type": "mrkdwn", "text": f"*Suppress before*: {do_not_alert_before}"},
-                {"type": "mrkdwn", "text": f"*Suppress after*: {do_not_alert_after}"},
-            ],
-        },
-    ]
+        })
+
+    if "username" in payload and payload["username"].contains("AWS Breakglass Alerts"):
+        blocks.append({
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
+                    {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
+                ],
+            })
+    else:
+        payload["icon_emoji"] = icon
+        blocks.append({
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
+                    {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
+                    {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
+                    {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
+                    {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
+                    {"type": "mrkdwn", "text": f"*Suppress before*: {do_not_alert_before}"},
+                    {"type": "mrkdwn", "text": f"*Suppress after*: {do_not_alert_after}"},
+                ],
+            })
+
+    payload["blocks"] = blocks
     return payload
 
 
@@ -569,21 +582,20 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
 
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
     cloudwatch_metric_filters = {
-        #'3.1 Unauthorized API calls': '?UnauthorizedOperation ?AccessDenied',
-        "3.1 Unauthorized API calls": '{($.errorCode = "*UnauthorizedOperation") || ($.errorCode = "AccessDenied*")}',
-        "3.2 Management Console sign-in without MFA": '{$.eventName = "ConsoleLogin" && $.additionalEventData.MFAUsed = "No"}',
-        "3.3 usage of root account": '{$.userIdentity.type = "Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != "AwsServiceEvent"}',
-        "3.4 IAM policy changes": "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}",
-        "3.5 CloudTrail configuration changes": "{($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging)}",
-        "3.6 AWS Management Console authentication failures": '{($.eventName = ConsoleLogin) && ($.errorMessage = "Failed authentication")}',
-        "3.7 disabling or scheduled deletion of customer created CMKs": "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}",
-        "3.8 S3 bucket policy changes": "{($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication))}",
-        "3.9 AWS Config configuration changes": "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}",
-        "3.10 security group changes": "{($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}",
-        "3.11 changes to Network Access Control Lists (NACL)": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}",
-        "3.12 changes to network gateways": "{($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway)}",
-        "3.13 route table changes": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}",
-        "3.14 VPC changes": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}",
+        "3.1 Unauthorized API calls": {"filter": '{($.errorCode = "*UnauthorizedOperation") || ($.errorCode = "AccessDenied*")}', "severity": "Medium"},
+        "3.2 Management Console sign-in without MFA": {"filter": '{$.eventName = "ConsoleLogin" && $.additionalEventData.MFAUsed = "No"}', "severity": "Medium"},
+        "3.3 usage of root account": {"filter": '{$.userIdentity.type = "Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != "AwsServiceEvent"}', "severity": "Critical"},
+        "3.4 IAM policy changes": {"filter": "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}", "severity": "Low"},
+        "3.5 CloudTrail configuration changes": {"filter": "{($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging)}", "severity": "High"},
+        "3.6 AWS Management Console authentication failures": {"filter": '{($.eventName = ConsoleLogin) && ($.errorMessage = "Failed authentication")}', "severity": "Low"},
+        "3.7 disabling or scheduled deletion of customer created CMKs": {"filter": "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}", "severity": "Medium"},
+        "3.8 S3 bucket policy changes": {"filter": "{($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication))}", "severity": "Low"},
+        "3.9 AWS Config configuration changes": {"filter": "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}", "severity": "Low"},
+        "3.10 security group changes": {"filter": "{($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}", "severity": "Low"},
+        "3.11 changes to Network Access Control Lists (NACL)": {"filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}", "severity": "Low"},
+        "3.12 changes to network gateways": {"filter": "{($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway)}", "severity": "Low"},
+        "3.13 route table changes": {"filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}", "severity": "Low"},
+        "3.14 VPC changes": {"filter": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}", "severity": "Low"},
     }
 
     title = "AWS CloudWatch Alarm."
@@ -617,13 +629,30 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + "]."
     )
 
+    trigger_time = (
+        message["StateChangeTime"].strftime(date_format)
+        if "StateChangeTime" in message
+        else "NOT_SET"
+    )
+
     aws_account_id = message["AWSAccountId"]
     cloudwatch_log_group = os.environ["CLOUDWATCH_LOG_GROUP_NAME"]
     cloudwatch_log_stream = aws_account_id + "_CloudTrail_" + region
     cloudwatch_metric_filter = ""
+    severity = "NOT_SET"
+    icon = ":question:"
 
     if alarm_name in cloudwatch_metric_filters:
-        cloudwatch_metric_filter = cloudwatch_metric_filters[alarm_name]
+        cloudwatch_metric_filter = cloudwatch_metric_filters[alarm_name]["filter"]
+        severity = cloudwatch_metric_filters[alarm_name]["severity"]
+        if severity.lower() == "low":
+            icon = ":information_source:"
+        elif severity.lower() == "medium":
+            icon = ":closed_lock_with_key:"
+        elif severity.lower() == "high":
+            icon = ":lock:"
+        elif severity.lower() == "critical":
+            icon = ":unlock:"
 
     cloudwatch_metric_filter = cloudwatch_metric_filter.replace(" ", "%20")
     cloudwatch_metric_filter = cloudwatch_metric_filter.replace("=", "%3D")
@@ -643,24 +672,22 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
     )
 
+    payload["icon_emoji"] = icon
     payload["blocks"] = [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"{app_function} {app_function_message_type}: {app_function_message}",
+                "text": title,
             },
         },
         {
             "type": "context",
             "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": value
-                    + " For full details check the AWS Console ["
-                    + cloudwatch_log_url
-                    + "].",
-                }
+                {"type": "mrkdwn", "text": f"*AWS Console link*: {cloudwatch_log_url}"},
+                {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
+                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
+                {"type": "mrkdwn", "text": f"*Type*: Security notification"},
             ],
         },
     ]
