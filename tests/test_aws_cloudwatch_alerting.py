@@ -32,10 +32,8 @@ today = date.today()
 now = datetime.now()
 now_string = now.strftime("%H") + ":" + now.strftime("%M")
 expected_cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region=eu-test-2#s=Alarms&alarm=test_alarm%20name"
-state_updated_timestamp_string = "2019-12-01T13:04:03Z"
-state_updated_datetime = datetime.strptime(
-    state_updated_timestamp_string, "%Y-%m-%dT%H:%M:%SZ"
-)
+state_updated_input_string = "2020-12-22T12:21:58.314+0000"
+state_updated_output_string = "2020-12-22T12:21:58"
 slack_channel_main = "test_slack_channel_main"
 slack_channel_critical = "test_slack_channel_critical"
 aws_environment = "test_environment"
@@ -687,7 +685,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateChangeTime": state_updated_datetime,
+            "StateChangeTime": state_updated_input_string,
         }
 
         tags = []
@@ -725,7 +723,7 @@ class TestRetriever(unittest.TestCase):
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
                         {
                             "type": "mrkdwn",
@@ -766,7 +764,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateChangeTime": state_updated_datetime,
+            "StateChangeTime": state_updated_input_string,
         }
 
         tags = [
@@ -807,7 +805,7 @@ class TestRetriever(unittest.TestCase):
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
                         {
                             "type": "mrkdwn",
@@ -848,7 +846,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateChangeTime": state_updated_datetime,
+            "StateChangeTime": state_updated_input_string,
         }
 
         tags = [
@@ -889,7 +887,7 @@ class TestRetriever(unittest.TestCase):
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
                         {
                             "type": "mrkdwn",
@@ -930,7 +928,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateChangeTime": state_updated_datetime,
+            "StateChangeTime": state_updated_input_string,
         }
 
         tags = [
@@ -1200,7 +1198,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     alarm = {
         "AlarmName": alarm_name,
         "AlarmArn": alarm_arn,
-        "StateChangeTime": state_updated_datetime,
+        "StateChangeTime": state_updated_input_string,
     }
 
     tags = [
@@ -1245,7 +1243,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*{trigger_time_field_title}*: {state_updated_timestamp_string}",
+                        "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                     },
                     {
                         "type": "mrkdwn",

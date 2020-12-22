@@ -12,7 +12,8 @@ from datetime import date
 
 https_prefix = "https://"
 cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
-date_format = "%Y-%m-%dT%H:%M:%SZ"
+date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
+date_format_display = "%Y-%m-%dT%H:%M:%S"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
 correlation_id = str(uuid.uuid4())
 
@@ -532,7 +533,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     trigger_time = (
-        message["StateChangeTime"].strftime(date_format)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(date_format_display)
         if "StateChangeTime" in message
         else "NOT_SET"
     )
@@ -683,7 +684,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     )
 
     trigger_time = (
-        message["StateChangeTime"].strftime(date_format)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(date_format_display)
         if "StateChangeTime" in message
         else "NOT_SET"
     )
@@ -720,9 +721,9 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + ";filter="
         + cloudwatch_metric_filter
         + ";start="
-        + cloudwatch_logs_search_start_datetime_object.strftime(date_format)
+        + cloudwatch_logs_search_start_datetime_object.strftime(date_format_display)
         + ";end="
-        + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
+        + cloudwatch_logs_search_end_datetime_object.strftime(date_format_display)
     )
 
     payload["username"] = f"AWS DataWorks Security Alerts - {environment_name}"
@@ -1003,7 +1004,7 @@ def lambda_handler(event, context):
 
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Parsed message", "message": "{dumped_message}", "region": ""{region}"", "correlation_id": "{correlation_id}'
+        f'Parsed message", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     notify_slack(message, region)
