@@ -12,7 +12,8 @@ from datetime import date
 
 https_prefix = "https://"
 cloudwatch_url = "https://console.aws.amazon.com/cloudwatch/home?region="
-date_format = "%Y-%m-%dT%H:%M:%SZ"
+date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
+date_format_display = "%Y-%m-%dT%H:%M:%S"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
 correlation_id = str(uuid.uuid4())
 
@@ -108,7 +109,7 @@ def decrypt(encrypted_url):
 def config_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing config notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing config notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     no_emojis = {
@@ -181,7 +182,7 @@ def config_notification(message, region, payload):
 def config_cloudwatch_event_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing cloudwatch event notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing cloudwatch event notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     # see: https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html
@@ -338,7 +339,7 @@ def config_cloudwatch_alarm_notification(
 ):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing cloudwatch notification", "dumped_message": "{dumped_message}", "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
+        f'Processing cloudwatch notification", "dumped_message": {dumped_message}, "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
     )
 
     trigger_object = message["Trigger"] if "Trigger" in message else None
@@ -439,7 +440,7 @@ def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
 def config_custom_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing custom cloudwatch notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing custom cloudwatch notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
@@ -532,7 +533,9 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     trigger_time = (
-        message["StateChangeTime"].strftime(date_format)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(
+            date_format_display
+        )
         if "StateChangeTime" in message
         else "NOT_SET"
     )
@@ -554,6 +557,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     if "username" in payload and payload["username"].contains("AWS Breakglass Alerts"):
+        payload["username"] = f"AWS DataWorks Breakglass Alerts - {environment_name}"
         blocks.append(
             {
                 "type": "context",
@@ -564,6 +568,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             }
         )
     else:
+        payload["username"] = f"AWS DataWorks Service Alerts - {environment_name}"
         payload["icon_emoji"] = icon
         blocks.append(
             {
@@ -593,7 +598,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing prowler notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing prowler notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
@@ -656,7 +661,11 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         },
     }
 
+    environment_name = os.environ["AWS_ENVIRONMENT"]
     alarm_name = message["AlarmName"]
+    title = f'*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
+
+    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
@@ -677,7 +686,9 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     )
 
     trigger_time = (
-        message["StateChangeTime"].strftime(date_format)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(
+            date_format_display
+        )
         if "StateChangeTime" in message
         else "NOT_SET"
     )
@@ -714,18 +725,19 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + ";filter="
         + cloudwatch_metric_filter
         + ";start="
-        + cloudwatch_logs_search_start_datetime_object.strftime(date_format)
+        + cloudwatch_logs_search_start_datetime_object.strftime(date_format_display)
         + ";end="
-        + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
+        + cloudwatch_logs_search_end_datetime_object.strftime(date_format_display)
     )
 
+    payload["username"] = f"AWS DataWorks Security Alerts - {environment_name}"
     payload["icon_emoji"] = icon
     payload["blocks"] = [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": alarm_name,
+                "text": title,
             },
         },
         {
@@ -744,7 +756,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
 def guardduty_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing guard duty notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing guard duty notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     gd_finding_detail_type = message["detail"]["type"]
@@ -845,7 +857,7 @@ def app_notification(slack_message, region, payload):
 def default_notification(message, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing default notification", "message": "{dumped_message}", "correlation_id": "{correlation_id}'
+        f'Processing default notification", "dumped_message": {dumped_message}, "correlation_id": "{correlation_id}'
     )
     payload["blocks"] = [
         {
@@ -988,7 +1000,7 @@ def lambda_handler(event, context):
 
     dumped_event = get_escaped_json_string(event)
     logger.info(
-        f'Processing event", "aws_event": "{dumped_event}", "correlation_id": "{correlation_id}'
+        f'Processing event", "aws_event": {dumped_event}, "correlation_id": "{correlation_id}'
     )
 
     message = json.loads(event["Records"][0]["Sns"]["Message"])
@@ -996,7 +1008,7 @@ def lambda_handler(event, context):
 
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Parsed message", "message": "{dumped_message}", "region": ""{region}"", "correlation_id": "{correlation_id}'
+        f'Parsed message", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     notify_slack(message, region)
