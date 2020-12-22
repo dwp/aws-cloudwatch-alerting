@@ -104,14 +104,14 @@ If this application is going to be used to receive anything other than `app` or 
 * `STATUS_SLACK_WEBHOOK_URL` (required if non app/custom alarm notications needed) -> The slack URL to send these notifications to
 * `STATUS_SLACK_CHANNEL` (required if non app/custom alarm notications needed) -> The name of the slack channel to send these notifications to
 * `STATUS_SLACK_USERNAME` (required if non app/custom alarm notications needed) -> The username used for posting these notifications, can be anything
-* `STATUS_SLACK_ICON_EMOJI` (required if non app/custom alarm notications needed) -> The icon name used for these notifications i.e. `:aws:`
+* `STATUS_SLACK_ICON_EMOJI` (optional) -> The icon name used for these notifications, defaults to `:aws:`
 
 If this application is going to be used to receive `app` notification types (see above) then the following must be provided for it to work
 
 * `APP_INFO_SLACK_WEBHOOK_URL` (required if app notications needed) -> The slack URL to send app notifications to
 * `APP_INFO_SLACK_CHANNEL` (required if app notications needed) -> The name of the slack channel to send app notifications to
 * `APP_INFO_SLACK_USERNAME` (required if app notications needed) -> The username used for posting app notifications, can be anything
-* `APP_INFO_SLACK_ICON_EMOJI` (required if app notications needed) -> The icon name used for app notifications i.e. `:aws:`
+* `APP_INFO_SLACK_ICON_EMOJI` (optional) -> The icon name used for app notifications, defaults to `:aws:`
 
 ## Tests
 

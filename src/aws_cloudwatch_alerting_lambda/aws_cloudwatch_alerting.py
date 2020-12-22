@@ -802,12 +802,11 @@ def notify_slack(message, region):
 
         slack_channel = os.environ["APP_INFO_SLACK_CHANNEL"]
         slack_username = os.environ["APP_INFO_SLACK_USERNAME"]
-        icon_emoji = os.environ["APP_INFO_SLACK_ICON_EMOJI"]
 
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "icon_emoji": icon_emoji if icon_emoji else ":aws:",
+            "icon_emoji": os.environ["APP_INFO_SLACK_ICON_EMOJI"] if "APP_INFO_SLACK_ICON_EMOJI" in os.environ else ":aws:",
         }
 
         dumped_payload = get_escaped_json_string(payload)
@@ -828,12 +827,11 @@ def notify_slack(message, region):
 
         slack_channel = os.environ["STATUS_SLACK_CHANNEL"]
         slack_username = os.environ["STATUS_SLACK_USERNAME"]
-        icon_emoji = os.environ["STATUS_SLACK_ICON_EMOJI"]
 
         payload = {
             "channel": slack_channel,
             "username": slack_username,
-            "icon_emoji": icon_emoji if icon_emoji else ":aws:",
+            "icon_emoji": os.environ["STATUS_SLACK_ICON_EMOJI"] if "STATUS_SLACK_ICON_EMOJI" in os.environ else ":aws:",
         }
 
         dumped_payload = get_escaped_json_string(payload)
