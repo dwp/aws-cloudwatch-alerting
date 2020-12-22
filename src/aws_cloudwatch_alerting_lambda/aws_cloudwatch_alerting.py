@@ -562,7 +562,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"*AWS Console link*: <{alarm_url}|Click here>"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*AWS Console link*: <{alarm_url}|Click here>",
+                    },
                     {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
                 ],
             }
@@ -574,7 +577,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"*AWS Console link*: <{alarm_url}|Click here>"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*AWS Console link*: <{alarm_url}|Click here>",
+                    },
                     {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
                     {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
                     {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
@@ -743,7 +749,10 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         {
             "type": "context",
             "elements": [
-                {"type": "mrkdwn", "text": f"*AWS Console link*: <{cloudwatch_log_url}|Click here>"},
+                {
+                    "type": "mrkdwn",
+                    "text": f"*AWS Console link*: <{cloudwatch_log_url}|Click here>",
+                },
                 {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
                 {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
                 {"type": "mrkdwn", "text": f"*Type*: Security notification"},
