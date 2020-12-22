@@ -109,7 +109,7 @@ def decrypt(encrypted_url):
 def config_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing config notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing config notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     no_emojis = {
@@ -182,7 +182,7 @@ def config_notification(message, region, payload):
 def config_cloudwatch_event_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing cloudwatch event notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing cloudwatch event notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     # see: https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html
@@ -339,7 +339,7 @@ def config_cloudwatch_alarm_notification(
 ):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing cloudwatch notification", "dumped_message": "{dumped_message}", "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
+        f'Processing cloudwatch notification", "dumped_message": {dumped_message}, "region": "{region}", "prowler_slack_channel": {prowler_slack_channel}, "correlation_id": "{correlation_id}'
     )
 
     trigger_object = message["Trigger"] if "Trigger" in message else None
@@ -440,7 +440,7 @@ def get_tags_for_cloudwatch_alarm(cw_client, alarm_arn):
 def config_custom_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing custom cloudwatch notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing custom cloudwatch notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
@@ -596,7 +596,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing prowler notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing prowler notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
@@ -752,7 +752,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
 def guardduty_notification(message, region, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing guard duty notification", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Processing guard duty notification", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     gd_finding_detail_type = message["detail"]["type"]
@@ -853,7 +853,7 @@ def app_notification(slack_message, region, payload):
 def default_notification(message, payload):
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing default notification", "message": "{dumped_message}", "correlation_id": "{correlation_id}'
+        f'Processing default notification", "dumped_message": {dumped_message}, "correlation_id": "{correlation_id}'
     )
     payload["blocks"] = [
         {
@@ -996,7 +996,7 @@ def lambda_handler(event, context):
 
     dumped_event = get_escaped_json_string(event)
     logger.info(
-        f'Processing event", "aws_event": "{dumped_event}", "correlation_id": "{correlation_id}'
+        f'Processing event", "aws_event": {dumped_event}, "correlation_id": "{correlation_id}'
     )
 
     message = json.loads(event["Records"][0]["Sns"]["Message"])
@@ -1004,7 +1004,7 @@ def lambda_handler(event, context):
 
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Parsed message", "message": "{dumped_message}", "region": "{region}", "correlation_id": "{correlation_id}'
+        f'Parsed message", "dumped_message": {dumped_message}, "region": "{region}", "correlation_id": "{correlation_id}'
     )
 
     notify_slack(message, region)
