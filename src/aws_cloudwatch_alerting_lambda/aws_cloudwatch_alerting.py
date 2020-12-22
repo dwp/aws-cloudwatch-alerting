@@ -554,6 +554,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     if "username" in payload and payload["username"].contains("AWS Breakglass Alerts"):
+        payload["username"] = f"AWS DataWorks Breakglass Alerts - {environment_name}"
         blocks.append(
             {
                 "type": "context",
@@ -564,6 +565,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             }
         )
     else:
+        payload["username"] = f"AWS DataWorks Service Alerts - {environment_name}"
         payload["icon_emoji"] = icon
         blocks.append(
             {
@@ -656,7 +658,11 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         },
     }
 
+    environment_name = os.environ["AWS_ENVIRONMENT"]
     alarm_name = message["AlarmName"]
+    title = f'*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
+
+    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
@@ -719,13 +725,14 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + cloudwatch_logs_search_end_datetime_object.strftime(date_format)
     )
 
+    payload["username"] = f"AWS DataWorks Security Alerts - {environment_name}"
     payload["icon_emoji"] = icon
     payload["blocks"] = [
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": alarm_name,
+                "text": title,
             },
         },
         {
