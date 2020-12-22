@@ -694,7 +694,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     )
 
     aws_account_id = message["AWSAccountId"]
-    cloudwatch_log_group = os.environ["CLOUDWATCH_LOG_GROUP_NAME"]
+    cloudwatch_log_group = "cloudTrail"
     cloudwatch_log_stream = aws_account_id + "_CloudTrail_" + region
     cloudwatch_metric_filter = ""
     severity = "NOT_SET"
