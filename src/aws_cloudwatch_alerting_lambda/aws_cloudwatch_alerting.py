@@ -533,7 +533,9 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
 
     trigger_time = (
-        datetime.strptime(message["StateChangeTime"], date_format).strftime(date_format_display)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(
+            date_format_display
+        )
         if "StateChangeTime" in message
         else "NOT_SET"
     )
@@ -684,7 +686,9 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     )
 
     trigger_time = (
-        datetime.strptime(message["StateChangeTime"], date_format).strftime(date_format_display)
+        datetime.strptime(message["StateChangeTime"], date_format).strftime(
+            date_format_display
+        )
         if "StateChangeTime" in message
         else "NOT_SET"
     )
