@@ -656,7 +656,6 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         },
     }
 
-    title = "AWS CloudWatch Alarm."
     alarm_name = message["AlarmName"]
 
     # providing a link back to the alarm is not of much use...
@@ -726,7 +725,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": title,
+                "text": alarm_name,
             },
         },
         {
