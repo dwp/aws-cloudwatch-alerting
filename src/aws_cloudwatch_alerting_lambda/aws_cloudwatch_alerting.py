@@ -343,7 +343,11 @@ def config_cloudwatch_alarm_notification(
 
     trigger_object = message["Trigger"] if "Trigger" in message else None
 
-    if trigger_object is not None and "Namespace" in trigger_object and trigger_object["Namespace"] == "Prowler/Monitoring":
+    if (
+        trigger_object is not None
+        and "Namespace" in trigger_object
+        and trigger_object["Namespace"] == "Prowler/Monitoring"
+    ):
         payload = config_prowler_cloudwatch_alarm_notification(message, region, payload)
         payload["channel"] = prowler_slack_channel
     else:
@@ -539,25 +543,30 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     payload["channel"] = slack_channel
     blocks = []
-    blocks.append({
+    blocks.append(
+        {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": title,
             },
-        })
+        }
+    )
 
     if "username" in payload and payload["username"].contains("AWS Breakglass Alerts"):
-        blocks.append({
+        blocks.append(
+            {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
                     {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
                 ],
-            })
+            }
+        )
     else:
         payload["icon_emoji"] = icon
-        blocks.append({
+        blocks.append(
+            {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": f"*AWS Console link*: {alarm_url}"},
@@ -565,10 +574,17 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
                     {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
                     {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
                     {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
-                    {"type": "mrkdwn", "text": f"*Suppress before*: {do_not_alert_before}"},
-                    {"type": "mrkdwn", "text": f"*Suppress after*: {do_not_alert_after}"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Suppress before*: {do_not_alert_before}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Suppress after*: {do_not_alert_after}",
+                    },
                 ],
-            })
+            }
+        )
 
     payload["blocks"] = blocks
     return payload
@@ -582,20 +598,62 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
 
     # See matching patterns at: https://github.com/dwp/terraform-aws-prowler-monitoring/blob/master/main.tf
     cloudwatch_metric_filters = {
-        "3.1 Unauthorized API calls": {"filter": '{($.errorCode = "*UnauthorizedOperation") || ($.errorCode = "AccessDenied*")}', "severity": "Medium"},
-        "3.2 Management Console sign-in without MFA": {"filter": '{$.eventName = "ConsoleLogin" && $.additionalEventData.MFAUsed = "No"}', "severity": "Medium"},
-        "3.3 usage of root account": {"filter": '{$.userIdentity.type = "Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != "AwsServiceEvent"}', "severity": "Critical"},
-        "3.4 IAM policy changes": {"filter": "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}", "severity": "Low"},
-        "3.5 CloudTrail configuration changes": {"filter": "{($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging)}", "severity": "High"},
-        "3.6 AWS Management Console authentication failures": {"filter": '{($.eventName = ConsoleLogin) && ($.errorMessage = "Failed authentication")}', "severity": "Low"},
-        "3.7 disabling or scheduled deletion of customer created CMKs": {"filter": "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}", "severity": "Medium"},
-        "3.8 S3 bucket policy changes": {"filter": "{($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication))}", "severity": "Low"},
-        "3.9 AWS Config configuration changes": {"filter": "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}", "severity": "Low"},
-        "3.10 security group changes": {"filter": "{($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}", "severity": "Low"},
-        "3.11 changes to Network Access Control Lists (NACL)": {"filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}", "severity": "Low"},
-        "3.12 changes to network gateways": {"filter": "{($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway)}", "severity": "Low"},
-        "3.13 route table changes": {"filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}", "severity": "Low"},
-        "3.14 VPC changes": {"filter": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}", "severity": "Low"},
+        "3.1 Unauthorized API calls": {
+            "filter": '{($.errorCode = "*UnauthorizedOperation") || ($.errorCode = "AccessDenied*")}',
+            "severity": "Medium",
+        },
+        "3.2 Management Console sign-in without MFA": {
+            "filter": '{$.eventName = "ConsoleLogin" && $.additionalEventData.MFAUsed = "No"}',
+            "severity": "Medium",
+        },
+        "3.3 usage of root account": {
+            "filter": '{$.userIdentity.type = "Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != "AwsServiceEvent"}',
+            "severity": "Critical",
+        },
+        "3.4 IAM policy changes": {
+            "filter": "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}",
+            "severity": "Low",
+        },
+        "3.5 CloudTrail configuration changes": {
+            "filter": "{($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging)}",
+            "severity": "High",
+        },
+        "3.6 AWS Management Console authentication failures": {
+            "filter": '{($.eventName = ConsoleLogin) && ($.errorMessage = "Failed authentication")}',
+            "severity": "Low",
+        },
+        "3.7 disabling or scheduled deletion of customer created CMKs": {
+            "filter": "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}",
+            "severity": "Medium",
+        },
+        "3.8 S3 bucket policy changes": {
+            "filter": "{($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication))}",
+            "severity": "Low",
+        },
+        "3.9 AWS Config configuration changes": {
+            "filter": "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}",
+            "severity": "Low",
+        },
+        "3.10 security group changes": {
+            "filter": "{($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}",
+            "severity": "Low",
+        },
+        "3.11 changes to Network Access Control Lists (NACL)": {
+            "filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}",
+            "severity": "Low",
+        },
+        "3.12 changes to network gateways": {
+            "filter": "{($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway)}",
+            "severity": "Low",
+        },
+        "3.13 route table changes": {
+            "filter": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}",
+            "severity": "Low",
+        },
+        "3.14 VPC changes": {
+            "filter": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}",
+            "severity": "Low",
+        },
     }
 
     title = "AWS CloudWatch Alarm."
