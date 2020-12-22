@@ -705,6 +705,7 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "username": f"AWS DataWorks Service Alerts - {aws_environment}",
             "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
@@ -786,6 +787,7 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "username": f"AWS DataWorks Service Alerts - {aws_environment}",
             "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
@@ -867,6 +869,7 @@ class TestRetriever(unittest.TestCase):
         suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
 
         expected_payload = {
+            "username": f"AWS DataWorks Service Alerts - {aws_environment}",
             "icon_emoji": ":warning:",
             "channel": slack_channel_main,
             "blocks": [
@@ -1222,6 +1225,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         expected_title = '@here *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
 
     expected_payload = {
+        "username": f"AWS DataWorks Service Alerts - {aws_environment}",
         "icon_emoji": expected_icon,
         "channel": expected_slack_channel,
         "blocks": [
