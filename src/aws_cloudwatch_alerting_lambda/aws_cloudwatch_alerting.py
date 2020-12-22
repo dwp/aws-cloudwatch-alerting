@@ -556,6 +556,8 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         }
     )
 
+    alarm_url = alarm_url.replace("|", "%7C")
+
     if "username" in payload and "AWS Breakglass Alerts" in payload["username"]:
         payload["username"] = f"AWS DataWorks Breakglass Alerts - {environment_name}"
         blocks.append(
@@ -735,6 +737,8 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         + ";end="
         + cloudwatch_logs_search_end_datetime_object.strftime(date_format_display)
     )
+
+    cloudwatch_log_url = cloudwatch_log_url.replace("|", "%7C")
 
     payload["username"] = f"AWS DataWorks Security Alerts - {environment_name}"
     payload["icon_emoji"] = icon
