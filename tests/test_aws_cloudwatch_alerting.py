@@ -27,6 +27,7 @@ tag_key_type = "notification_type"
 tag_key_active_days = "active_days"
 tag_key_do_not_alert_before = "do_not_alert_before"
 tag_key_do_not_alert_after = "do_not_alert_after"
+test_namespace = "Test/Monitoring"
 today = date.today()
 now = datetime.now()
 now_string = now.strftime("%H") + ":" + now.strftime("%M")
@@ -94,7 +95,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Trigger": {"Namespace": "Test/Monitoring"}}
+        event = {"Trigger": {"Namespace": test_namespace}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -124,7 +125,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Trigger": {"Test_Namespace": "Test/Monitoring"}}
+        event = {"Trigger": {"Test_Namespace": test_namespace}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -214,7 +215,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Test_Trigger": {"Test_Namespace": "Test/Monitoring"}}
+        event = {"Test_Trigger": {"Test_Namespace": test_namespace}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
