@@ -719,7 +719,7 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
                         },
                         {
                             "type": "mrkdwn",
@@ -801,7 +801,7 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
                         },
                         {
                             "type": "mrkdwn",
@@ -883,7 +883,7 @@ class TestRetriever(unittest.TestCase):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
                         },
                         {
                             "type": "mrkdwn",
@@ -1239,7 +1239,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"*{attachment_title_link_field}*: {expected_cloudwatch_url}",
+                        "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
                     },
                     {
                         "type": "mrkdwn",
