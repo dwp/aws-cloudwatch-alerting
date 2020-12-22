@@ -27,6 +27,7 @@ tag_key_type = "notification_type"
 tag_key_active_days = "active_days"
 tag_key_do_not_alert_before = "do_not_alert_before"
 tag_key_do_not_alert_after = "do_not_alert_after"
+test_namespace = "Test/Monitoring"
 today = date.today()
 now = datetime.now()
 now_string = now.strftime("%H") + ":" + now.strftime("%M")
@@ -64,7 +65,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Namespace": "Prowler/Monitoring"}
+        event = {"Trigger": {"Namespace": "Prowler/Monitoring"}}
         payload = {}
         return_payload = {"channel": slack_channel_main}
 
@@ -94,7 +95,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Namespace": "Test/Monitoring"}
+        event = {"Trigger": {"Namespace": test_namespace}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -124,7 +125,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Test": "Test/Monitoring"}
+        event = {"Trigger": {"Test_Namespace": test_namespace}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -154,7 +155,7 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Namespace": ""}
+        event = {"Trigger": {"Namespace": ""}}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -184,7 +185,97 @@ class TestRetriever(unittest.TestCase):
         custom_cw_mock,
         prowler_cw_mock,
     ):
-        event = {"Namespace": None}
+        event = {"Trigger": {"Namespace": None}}
+        payload = {}
+        return_payload = {"channel": slack_channel_critical}
+
+        custom_cw_mock.return_value = return_payload
+
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
+        )
+
+        prowler_cw_mock.assert_not_called()
+        custom_cw_mock.assert_called_once_with(event, region, payload)
+
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_cloudwatch_alarm_notification_returns_custom_config_when_no_trigger_present(
+        self,
+        suppression_mock,
+        custom_cw_mock,
+        prowler_cw_mock,
+    ):
+        event = {"Test_Trigger": {"Test_Namespace": test_namespace}}
+        payload = {}
+        return_payload = {"channel": slack_channel_critical}
+
+        custom_cw_mock.return_value = return_payload
+
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
+        )
+
+        prowler_cw_mock.assert_not_called()
+        custom_cw_mock.assert_called_once_with(event, region, payload)
+
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_cloudwatch_alarm_notification_returns_custom_config_when_trigger_blank(
+        self,
+        suppression_mock,
+        custom_cw_mock,
+        prowler_cw_mock,
+    ):
+        event = {"Trigger": ""}
+        payload = {}
+        return_payload = {"channel": slack_channel_critical}
+
+        custom_cw_mock.return_value = return_payload
+
+        actual_message = aws_cloudwatch_alerting.config_cloudwatch_alarm_notification(
+            event, region, slack_channel_main, payload
+        )
+
+        prowler_cw_mock.assert_not_called()
+        custom_cw_mock.assert_called_once_with(event, region, payload)
+
+        self.assertEqual(actual_message["channel"], slack_channel_critical)
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_prowler_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_cloudwatch_alarm_notification_returns_custom_config_when_trigger_none(
+        self,
+        suppression_mock,
+        custom_cw_mock,
+        prowler_cw_mock,
+    ):
+        event = {"Trigger": None}
         payload = {}
         return_payload = {"channel": slack_channel_critical}
 
@@ -596,7 +687,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateUpdatedTimestamp": state_updated_datetime,
+            "StateChangeTime": state_updated_datetime,
         }
 
         tags = []
@@ -674,7 +765,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateUpdatedTimestamp": state_updated_datetime,
+            "StateChangeTime": state_updated_datetime,
         }
 
         tags = [
@@ -755,7 +846,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateUpdatedTimestamp": state_updated_datetime,
+            "StateChangeTime": state_updated_datetime,
         }
 
         tags = [
@@ -836,7 +927,7 @@ class TestRetriever(unittest.TestCase):
         alarm = {
             "AlarmName": alarm_name,
             "AlarmArn": alarm_arn,
-            "StateUpdatedTimestamp": state_updated_datetime,
+            "StateChangeTime": state_updated_datetime,
         }
 
         tags = [
@@ -1106,7 +1197,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     alarm = {
         "AlarmName": alarm_name,
         "AlarmArn": alarm_arn,
-        "StateUpdatedTimestamp": state_updated_datetime,
+        "StateChangeTime": state_updated_datetime,
     }
 
     tags = [
