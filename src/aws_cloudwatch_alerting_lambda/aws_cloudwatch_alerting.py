@@ -572,6 +572,22 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
                 ],
             }
         )
+    elif alarm_name.startswith("Security Hub finding"):
+        finding_url = f"https://{region}.console.aws.amazon.com/securityhub/home?region={region}#/findings?search=ComplianceStatus%3D%255Coperator%255C%253AEQUALS%255C%253AWARNING%26ComplianceStatus%3D%255Coperator%255C%253AEQUALS%255C%253AERROR"
+        payload["username"] = f"AWS DataWorks Security Hub Alerts - {environment_name}"
+        payload["icon_emoji"] = ":old_key:"
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*AWS Console link*: <{finding_url}|Click here>",
+                    },
+                    {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
+                ],
+            }
+        )
     else:
         payload["username"] = f"AWS DataWorks Service Alerts - {environment_name}"
         payload["icon_emoji"] = icon
