@@ -38,13 +38,17 @@ slack_channel_main = "test_slack_channel_main"
 slack_channel_critical = "test_slack_channel_critical"
 aws_environment = "test_environment"
 
-os.environ["AWS_SLACK_CHANNEL_MAIN"] = slack_channel_main
-os.environ["AWS_SLACK_CHANNEL_CRITICAL"] = slack_channel_critical
-os.environ["AWS_ENVIRONMENT"] = aws_environment
-
 icon_information_source = ":information_source:"
 icon_warning = ":warning:"
 icon_fire = ":fire:"
+
+
+@pytest.fixture(autouse=True)
+def before():
+    os.environ["AWS_SLACK_CHANNEL_MAIN"] = slack_channel_main
+    os.environ["AWS_SLACK_CHANNEL_CRITICAL"] = slack_channel_critical
+    os.environ["AWS_ENVIRONMENT"] = aws_environment
+    os.environ["STATUS_SLACK_USERNAME"] = "test_username"
 
 
 class TestRetriever(unittest.TestCase):
@@ -905,6 +909,139 @@ class TestRetriever(unittest.TestCase):
                         {
                             "type": "mrkdwn",
                             "text": f"*{skip_after_field_title}*: NOT_SET",
+                        },
+                    ],
+                },
+            ],
+        }
+        self.assertEqual(expected_payload, actual_payload)
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_cloudwatch_alarm_notification_returns_breakglass_values(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        self.maxDiff = None
+        breakglass_user = "test AWS Breakglass Alerts test"
+        os.environ["STATUS_SLACK_USERNAME"] = breakglass_user
+
+        alarm = {
+            "AlarmName": alarm_name,
+            "AlarmArn": alarm_arn,
+            "StateChangeTime": state_updated_input_string,
+        }
+
+        tags = [
+            {"Key": tag_key_severity, "Value": ""},
+            {"Key": tag_key_type, "Value": ""},
+        ]
+
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
+
+        actual_payload = (
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {"username": breakglass_user}
+            )
+        )
+        tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
+
+        expected_payload = {
+            "username": f"AWS DataWorks Breakglass Alerts - {aws_environment}",
+            "channel": slack_channel_main,
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f'*TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2',
+                    },
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
+                        },
+                    ],
+                },
+            ],
+        }
+        self.assertEqual(expected_payload, actual_payload)
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_cloudwatch_alarm_notification_returns_security_finding_values(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        self.maxDiff = None
+
+        alarm = {
+            "AlarmName": "Security Hub finding for tests",
+            "AlarmArn": alarm_arn,
+            "StateChangeTime": state_updated_input_string,
+        }
+
+        tags = [
+            {"Key": tag_key_severity, "Value": ""},
+            {"Key": tag_key_type, "Value": ""},
+        ]
+
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm = tags_mock
+        aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm.return_value = tags
+        aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
+
+        actual_payload = (
+            aws_cloudwatch_alerting.config_custom_cloudwatch_alarm_notification(
+                alarm, region, {}
+            )
+        )
+        tags_mock.assert_called_once_with(mock.ANY, alarm_arn)
+        suppression_mock.assert_called_once_with(tags, mock.ANY, mock.ANY)
+
+        expected_url = f"https://{region}.console.aws.amazon.com/securityhub/home?region={region}#/findings?search=ComplianceStatus%3D%255Coperator%255C%253AEQUALS%255C%253AWARNING%26ComplianceStatus%3D%255Coperator%255C%253AEQUALS%255C%253AERROR"
+
+        expected_payload = {
+            "username": f"AWS DataWorks Security Hub Alerts - {aws_environment}",
+            "channel": slack_channel_main,
+            "icon_emoji": ":old_key:",
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f'*TEST_ENVIRONMENT*: "_Security Hub finding for tests_" in eu-test-2',
+                    },
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{attachment_title_link_field}*: <{expected_url}|Click here>",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
                     ],
                 },
