@@ -16,6 +16,7 @@ date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 date_format_display = "%Y-%m-%dT%H:%M:%S"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
 correlation_id = str(uuid.uuid4())
+information_source_icon = ":information_source:"
 
 
 # Initialise logging
@@ -513,7 +514,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     if notification_type.lower() == "information":
-        icon = ":information_source:"
+        icon = information_source_icon
     elif notification_type.lower() == "error":
         icon = ":fire:"
         if severity.lower() == "high" or severity.lower() == "critical":
@@ -728,7 +729,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         cloudwatch_metric_filter = cloudwatch_metric_filters[alarm_name]["filter"]
         severity = cloudwatch_metric_filters[alarm_name]["severity"]
         if severity.lower() == "low":
-            icon = ":information_source:"
+            icon = information_source_icon
         elif severity.lower() == "medium":
             icon = ":closed_lock_with_key:"
         elif severity.lower() == "high":
@@ -949,7 +950,7 @@ def custom_notification(message, region, payload):
     if icon_override != "NOT_SET":
         icon = icon_override
     elif notification_type.lower() == "information":
-        icon = ":information_source:"
+        icon = information_source_icon
     elif notification_type.lower() == "error":
         icon = ":fire:"
 

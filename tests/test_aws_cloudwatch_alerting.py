@@ -37,6 +37,8 @@ state_updated_output_string = "2020-12-22T12:21:58"
 slack_channel_main = "test_slack_channel_main"
 slack_channel_critical = "test_slack_channel_critical"
 aws_environment = "test_environment"
+test_title = "AWS DataWorks Service Alerts - test_environment"
+aws_icon = ":aws:"
 
 icon_information_source = ":information_source:"
 icon_warning = ":warning:"
@@ -1340,7 +1342,7 @@ class TestRetriever(unittest.TestCase):
             icon_warning,
             slack_channel_main,
             "NOT_SET",
-            "AWS DataWorks Service Alerts - test_environment",
+            test_title,
         )
 
 
@@ -1356,7 +1358,7 @@ class TestRetriever(unittest.TestCase):
         tags_mock,
     ):
         input_message = {
-            "icon_override": ":aws:",
+            "icon_override": aws_icon,
             "slack_channel_override": "test-slack-channel-override"
         }
 
@@ -1369,10 +1371,10 @@ class TestRetriever(unittest.TestCase):
             "NOT_SET",
             "NOT_SET",
             "NOT_SET",
-            ":aws:",
+            aws_icon,
             "test-slack-channel-override",
             "NOT_SET",
-            "AWS DataWorks Service Alerts - test_environment",
+            test_title,
         )
     
 
@@ -1394,7 +1396,7 @@ class TestRetriever(unittest.TestCase):
             "active_days": "Monday",
             "do_not_alert_before": "0700",
             "do_not_alert_after": "1900",
-            "icon_override": ":aws:",
+            "icon_override": aws_icon,
             "slack_channel_override": "test-slack-channel-override",
             "log_with_here": "true",
             "title_text": "Test Title Text"
@@ -1409,40 +1411,11 @@ class TestRetriever(unittest.TestCase):
             "Monday",
             "0700",
             "1900",
-            ":aws:",
+            aws_icon,
             "test-slack-channel-override",
             "Test Title Text",
             "Test Alert",
             True,
-        )
-
-
-    @mock.patch(
-        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
-    )
-    @mock.patch(
-        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
-    )
-    def test_config_custom_alarm_notification_returns_right_values_when_all_defaults_used(
-        self,
-        suppression_mock,
-        tags_mock,
-    ):
-        input_message = {}
-
-        custom_alarm_notification_returns_right_values(
-            self,
-            suppression_mock,
-            input_message,
-            "Medium",
-            "Warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
-            icon_warning,
-            slack_channel_main,
-            "NOT_SET",
-            "AWS DataWorks Service Alerts - test_environment",
         )
 
 
