@@ -1356,13 +1356,8 @@ class TestRetriever(unittest.TestCase):
         tags_mock,
     ):
         input_message = {
-<<<<<<< HEAD
             "icon_override": aws_icon,
             "slack_channel_override": "test-slack-channel-override"
-=======
-            "icon_override": ":aws:",
-            "slack_channel_override": "test-slack-channel-override",
->>>>>>> f7f8a2c6de30adfe46b0bd578f6b387275d7528b
         }
 
         custom_alarm_notification_returns_right_values(
