@@ -1357,7 +1357,7 @@ class TestRetriever(unittest.TestCase):
     ):
         input_message = {
             "icon_override": aws_icon,
-            "slack_channel_override": "test-slack-channel-override"
+            "slack_channel_override": "test-slack-channel-override",
         }
 
         custom_alarm_notification_returns_right_values(
