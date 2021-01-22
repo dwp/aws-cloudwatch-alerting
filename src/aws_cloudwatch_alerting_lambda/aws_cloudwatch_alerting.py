@@ -16,6 +16,7 @@ date_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 date_format_display = "%Y-%m-%dT%H:%M:%S"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
 correlation_id = str(uuid.uuid4())
+information_source_icon = ":information_source:"
 
 
 # Initialise logging
@@ -308,7 +309,7 @@ def config_cloudwatch_event_notification(message, region, payload):
         # we do not want to be alerted about any of these...
         quit()
     else:
-        return default_notification(message, payload)
+        return custom_notification(message, region, payload)
 
     payload["blocks"] = [
         {
@@ -513,7 +514,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     if notification_type.lower() == "information":
-        icon = ":information_source:"
+        icon = information_source_icon
     elif notification_type.lower() == "error":
         icon = ":fire:"
         if severity.lower() == "high" or severity.lower() == "critical":
@@ -728,7 +729,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         cloudwatch_metric_filter = cloudwatch_metric_filters[alarm_name]["filter"]
         severity = cloudwatch_metric_filters[alarm_name]["severity"]
         if severity.lower() == "low":
-            icon = ":information_source:"
+            icon = information_source_icon
         elif severity.lower() == "medium":
             icon = ":closed_lock_with_key:"
         elif severity.lower() == "high":
@@ -883,23 +884,130 @@ def app_notification(slack_message, region, payload):
     return payload
 
 
-def default_notification(message, payload):
+def custom_notification(message, region, payload):
+    global date_format_display
+
     dumped_message = get_escaped_json_string(message)
     logger.info(
-        f'Processing default notification", "dumped_message": {dumped_message}, "correlation_id": "{correlation_id}'
+        f'Processing custom notification", "dumped_message": {dumped_message}, "correlation_id": "{correlation_id}", "region": "{region}'
     )
-    payload["blocks"] = [
+
+    tags = []
+    keys = ["active_days", "do_not_alert_before", "do_not_alert_after"]
+    for key in keys:
+        if key in message:
+            tags.append({"Key": key, "Value": message[key]})
+
+    if is_alarm_suppressed(tags, date.today(), datetime.now()):
+        logger.info(
+            f'Exiting script normally due to suppressed alarm", "correlation_id": "{correlation_id}'
+        )
+        sys.exit(0)
+
+    environment_name = os.environ["AWS_ENVIRONMENT"]
+    slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
+    slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
+
+    active_days = message["active_days"] if "active_days" in message else "NOT_SET"
+    do_not_alert_before = (
+        message["do_not_alert_before"]
+        if "do_not_alert_before" in message
+        else "NOT_SET"
+    )
+    do_not_alert_after = (
+        message["do_not_alert_after"] if "do_not_alert_after" in message else "NOT_SET"
+    )
+    logger.info(
+        f'Set slack message suppression overrides", "active_days": "{active_days}", "do_not_alert_before": "{do_not_alert_before}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
+    )
+
+    severity = message["severity"] if "severity" in message else "Medium"
+    notification_type = (
+        message["notification_type"] if "notification_type" in message else "Warning"
+    )
+    slack_username = (
+        message["slack_username"]
+        if "slack_username" in message
+        else f"AWS DataWorks Service Alerts - {environment_name}"
+    )
+    icon_override = (
+        message["icon_override"] if "icon_override" in message else "NOT_SET"
+    )
+    slack_channel_override = (
+        message["slack_channel_override"]
+        if "slack_channel_override" in message
+        else "NOT_SET"
+    )
+    log_with_here = (
+        message["log_with_here"] if "log_with_here" in message else "NOT_SET"
+    )
+    title_text = message["title_text"] if "title_text" in message else "NOT_SET"
+
+    icon = ":warning:"
+    here = ""
+    slack_channel = slack_channel_main
+
+    if icon_override != "NOT_SET":
+        icon = icon_override
+    elif notification_type.lower() == "information":
+        icon = information_source_icon
+    elif notification_type.lower() == "error":
+        icon = ":fire:"
+
+    if slack_channel_override != "NOT_SET":
+        slack_channel = slack_channel_override
+    elif notification_type.lower() == "error":
+        if severity.lower() == "high" or severity.lower() == "critical":
+            slack_channel = slack_channel_critical
+    elif severity.lower() == "critical":
+        slack_channel = slack_channel_critical
+
+    trigger_time = datetime.now().strftime(date_format_display)
+
+    logger.info(
+        f'Set slack message variables", "severity": "{severity}", "notification_type": "{notification_type}", "slack_username": "{slack_username}", "trigger_time": "{trigger_time}", "icon": "{icon}", "slack_channel": "{slack_channel}", "correlation_id": "{correlation_id}'
+    )
+
+    if log_with_here.lower() == "true":
+        here = "@here "
+
+    title = f'{here}*{environment_name.upper()}*: "_{title_text}_" in {region}'
+    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
+
+    payload["channel"] = slack_channel
+    blocks = []
+    blocks.append(
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": "Unindentified message"},
-        },
+            "text": {
+                "type": "mrkdwn",
+                "text": title,
+            },
+        }
+    )
+
+    payload["username"] = slack_username
+    payload["icon_emoji"] = icon
+    blocks.append(
         {
             "type": "context",
             "elements": [
-                {"type": "plain_text", "text": f"*Dumped message*: {dumped_message}"}
+                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
+                {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
+                {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Suppress before*: {do_not_alert_before}",
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Suppress after*: {do_not_alert_after}",
+                },
             ],
-        },
-    ]
+        }
+    )
+
+    payload["blocks"] = blocks
     return payload
 
 
@@ -985,7 +1093,7 @@ def notify_slack(message, region):
                     message, region, payload
                 )
         else:
-            payload = default_notification(message, payload)
+            payload = custom_notification(message, region, payload)
 
     if "blocks" in payload:
         payload["blocks"].insert(0, {"type": "divider"})

@@ -56,7 +56,7 @@ If the message has the `AlarmName` field it is a cloudwatch alarm notification. 
 
 If the message has the `Namespace` field and its value is set to `Prowler/Monitoring` then the message is assumed to be from the Prowler monitoring that is set up. In this case, the message is processed with a title of the name of the monitoring alert triggered and a URL to go to the alert directly is generated and set in the slack message.
 
-#### Custom alarms
+#### Custom cloudwatch alarms
 
 Without the `Namespace` field or if it is set to a different value, then the message is treated differently. The title will be set as the following:
 
@@ -112,6 +112,27 @@ If this application is going to be used to receive `app` notification types (see
 * `APP_INFO_SLACK_CHANNEL` (required if app notications needed) -> The name of the slack channel to send app notifications to
 * `APP_INFO_SLACK_USERNAME` (required if app notications needed) -> The username used for posting app notifications, can be anything
 * `APP_INFO_SLACK_ICON_EMOJI` (optional) -> The icon name used for app notifications, defaults to `:aws:`
+
+### Custom notifications
+
+If the message doesn't meet any of the conditions to be one of the types above, then it is treated as a custom notification. This enables anyone to log notifications with the right message to the SQS queues that are subscribed by this lambda. The following is an example message to send where the values describe what they can be:
+
+```
+{
+    "severity": "Critical" #Can be Critical, High, Medium or Low and defaults to "Medium"
+    "notification_type": "Error" #Can be Error, Warning or Information and defaults to Warning
+    "slack_username": "PDM Alerts" #Username for slack message and defaults to "AWS DataWorks Service Alerts - {environment_name}"
+    "active_days": "Monday" #See "Custom alarm tags" above (default is "NOT_SET")
+    "do_not_alert_before": "0700" #See "Custom alarm tags" above (default is "NOT_SET")
+    "do_not_alert_after": "1900" #See "Custom alarm tags" above (default is "NOT_SET")
+    "icon_override": ":aws:" #Slack text to create icon emoji for the message, default is to work out an icon from severity and notification_type
+    "slack_channel_override": "aws-dataworks-critical-alerts" #Slack channel name for the message, default is to work out an icon from severity and notification_type
+    "log_with_here": "true" #If "true" then adds @here to the slack message
+    "title_text": "HTME Export completed" #Custom text for the alert, defaults to "NOT_SET"
+}
+```
+
+The defaults allow for SQS messages with incorrect format to still log to slack so we can see where there are issues.
 
 ## Tests
 

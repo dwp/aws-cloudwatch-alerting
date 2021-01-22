@@ -37,6 +37,8 @@ state_updated_output_string = "2020-12-22T12:21:58"
 slack_channel_main = "test_slack_channel_main"
 slack_channel_critical = "test_slack_channel_critical"
 aws_environment = "test_environment"
+test_title = "AWS DataWorks Service Alerts - test_environment"
+aws_icon = ":aws:"
 
 icon_information_source = ":information_source:"
 icon_warning = ":warning:"
@@ -1314,6 +1316,105 @@ class TestRetriever(unittest.TestCase):
 
         self.assertEqual(expected_result, actual_result)
 
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_alarm_notification_returns_right_values_when_all_defaults_used(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        input_message = {}
+
+        custom_alarm_notification_returns_right_values(
+            self,
+            suppression_mock,
+            input_message,
+            "Medium",
+            "Warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
+            icon_warning,
+            slack_channel_main,
+            "NOT_SET",
+            test_title,
+        )
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_alarm_notification_returns_right_values_when_overrides_used(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        input_message = {
+            "icon_override": aws_icon,
+            "slack_channel_override": "test-slack-channel-override",
+        }
+
+        custom_alarm_notification_returns_right_values(
+            self,
+            suppression_mock,
+            input_message,
+            "Medium",
+            "Warning",
+            "NOT_SET",
+            "NOT_SET",
+            "NOT_SET",
+            aws_icon,
+            "test-slack-channel-override",
+            "NOT_SET",
+            test_title,
+        )
+
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_alarm_notification_returns_right_values_when_all_values_passed_in(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        input_message = {
+            "severity": "Low",
+            "notification_type": "Information",
+            "slack_username": "Test Alert",
+            "active_days": "Monday",
+            "do_not_alert_before": "0700",
+            "do_not_alert_after": "1900",
+            "icon_override": aws_icon,
+            "slack_channel_override": "test-slack-channel-override",
+            "log_with_here": "true",
+            "title_text": "Test Title Text",
+        }
+
+        custom_alarm_notification_returns_right_values(
+            self,
+            suppression_mock,
+            input_message,
+            "Low",
+            "Information",
+            "Monday",
+            "0700",
+            "1900",
+            aws_icon,
+            "test-slack-channel-override",
+            "Test Title Text",
+            "Test Alert",
+            True,
+        )
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
@@ -1382,6 +1483,79 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
                         "type": "mrkdwn",
                         "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                     },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{severity_field_title}*: {expected_severity}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{type_field_title}*: {expected_type}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{active_days_field_title}*: {expected_active_days}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{skip_before_field_title}*: {expected_skip_before}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{skip_after_field_title}*: {expected_skip_after}",
+                    },
+                ],
+            },
+        ],
+    }
+
+    self.assertEqual(expected_payload, actual_payload)
+
+
+def custom_alarm_notification_returns_right_values(
+    self,
+    suppression_mock,
+    input_message,
+    expected_severity,
+    expected_type,
+    expected_active_days,
+    expected_skip_before,
+    expected_skip_after,
+    expected_icon,
+    expected_slack_channel,
+    expected_title_text,
+    expected_username,
+    expected_here_tag=False,
+):
+    self.maxDiff = None
+
+    aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
+
+    actual_payload = aws_cloudwatch_alerting.custom_notification(
+        input_message, region, {}
+    )
+    suppression_mock.assert_called_once()
+
+    expected_title = f'*TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
+    if expected_here_tag:
+        expected_title = (
+            f'@here *TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
+        )
+
+    expected_payload = {
+        "username": expected_username,
+        "icon_emoji": expected_icon,
+        "channel": expected_slack_channel,
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": expected_title,
+                },
+            },
+            {
+                "type": "context",
+                "elements": [
                     {
                         "type": "mrkdwn",
                         "text": f"*{severity_field_title}*: {expected_severity}",
