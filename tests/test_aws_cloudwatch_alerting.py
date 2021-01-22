@@ -1316,7 +1316,6 @@ class TestRetriever(unittest.TestCase):
 
         self.assertEqual(expected_result, actual_result)
 
-
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
@@ -1345,7 +1344,6 @@ class TestRetriever(unittest.TestCase):
             test_title,
         )
 
-
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
     )
@@ -1358,8 +1356,13 @@ class TestRetriever(unittest.TestCase):
         tags_mock,
     ):
         input_message = {
+<<<<<<< HEAD
             "icon_override": aws_icon,
             "slack_channel_override": "test-slack-channel-override"
+=======
+            "icon_override": ":aws:",
+            "slack_channel_override": "test-slack-channel-override",
+>>>>>>> f7f8a2c6de30adfe46b0bd578f6b387275d7528b
         }
 
         custom_alarm_notification_returns_right_values(
@@ -1376,7 +1379,6 @@ class TestRetriever(unittest.TestCase):
             "NOT_SET",
             test_title,
         )
-    
 
     @mock.patch(
         "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
@@ -1399,7 +1401,7 @@ class TestRetriever(unittest.TestCase):
             "icon_override": aws_icon,
             "slack_channel_override": "test-slack-channel-override",
             "log_with_here": "true",
-            "title_text": "Test Title Text"
+            "title_text": "Test Title Text",
         }
 
         custom_alarm_notification_returns_right_values(
@@ -1528,22 +1530,21 @@ def custom_alarm_notification_returns_right_values(
     expected_title_text,
     expected_username,
     expected_here_tag=False,
-
 ):
     self.maxDiff = None
 
     aws_cloudwatch_alerting.is_alarm_suppressed.return_value = False
 
-    actual_payload = (
-        aws_cloudwatch_alerting.custom_notification(
-            input_message, region, {}
-        )
+    actual_payload = aws_cloudwatch_alerting.custom_notification(
+        input_message, region, {}
     )
     suppression_mock.assert_called_once()
 
     expected_title = f'*TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
     if expected_here_tag:
-        expected_title = f'@here *TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
+        expected_title = (
+            f'@here *TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
+        )
 
     expected_payload = {
         "username": expected_username,
