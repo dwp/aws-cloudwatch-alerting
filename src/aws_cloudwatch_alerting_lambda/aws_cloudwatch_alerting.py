@@ -959,7 +959,7 @@ def custom_notification(message, region, payload):
     elif notification_type.lower() == "error":
         if severity.lower() == "high" or severity.lower() == "critical":
             slack_channel = slack_channel_critical
-    elif severity.lower() == "critical":
+    elif notification_type.lower() != "information" and severity.lower() == "critical":
         slack_channel = slack_channel_critical
 
     trigger_time = datetime.now().strftime(date_format_display)
