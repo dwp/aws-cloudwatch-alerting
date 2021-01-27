@@ -134,6 +134,24 @@ If the message doesn't meet any of the conditions to be one of the types above, 
 
 The defaults allow for SQS messages with incorrect format to still log to slack so we can see where there are issues.
 
+You can also pass in custom fields to appear in the alert using the below format:
+
+```
+...
+    "custom_elements": [
+        {
+            "key": "element_name_1",
+            "value": "element_value_1"
+        },
+        {
+            "key": "element_name_2",
+            "value": "element_value_2"
+        },
+        ...
+    ]
+...
+```
+
 ## Tests
 
 The module uses tox to execute its unit tests using pytest runner. In order to run, you need to `pip install tox` first and then simply run `tox` from the root level.

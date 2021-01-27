@@ -988,22 +988,32 @@ def custom_notification(message, region, payload):
 
     payload["username"] = slack_username
     payload["icon_emoji"] = icon
+
+    elements = [
+        {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
+        {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
+        {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
+        {
+            "type": "mrkdwn",
+            "text": f"*Suppress before*: {do_not_alert_before}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*Suppress after*: {do_not_alert_after}",
+        },
+    ]
+
+    if "custom_elements" in message:
+        for custom_element in message:
+            if "key" in custom_element and "value" in custom_element:
+                key = custom_element["key"]
+                key = custom_element["value"]
+                elements.append({"type": "mrkdwn", "text": f"*{key}*: {value}"})
+
     blocks.append(
         {
             "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
-                {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
-                {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Suppress before*: {do_not_alert_before}",
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Suppress after*: {do_not_alert_after}",
-                },
-            ],
+            "elements": elements,
         }
     )
 
