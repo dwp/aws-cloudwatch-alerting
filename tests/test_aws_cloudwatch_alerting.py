@@ -1438,15 +1438,9 @@ class TestRetriever(unittest.TestCase):
             "log_with_here": "true",
             "title_text": "Test Title Text",
             "custom_elements": [
-                {
-                    "key": "element_name_1",
-                    "value": "element_value_1"
-                },
-                {
-                    "key": "element_name_2",
-                    "value": "element_value_2"
-                }
-            ]
+                {"key": "element_name_1", "value": "element_value_1"},
+                {"key": "element_name_2", "value": "element_value_2"},
+            ],
         }
 
         expected_custom_elements = [
@@ -1457,7 +1451,7 @@ class TestRetriever(unittest.TestCase):
             {
                 "type": "mrkdwn",
                 "text": f"*element_name_2*: element_value_2",
-            }
+            },
         ]
 
         custom_alarm_notification_returns_right_values(
