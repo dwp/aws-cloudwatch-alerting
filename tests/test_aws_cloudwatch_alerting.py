@@ -1415,6 +1415,61 @@ class TestRetriever(unittest.TestCase):
             True,
         )
 
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.get_tags_for_cloudwatch_alarm"
+    )
+    @mock.patch(
+        "aws_cloudwatch_alerting_lambda.aws_cloudwatch_alerting.is_alarm_suppressed"
+    )
+    def test_config_custom_alarm_notification_returns_right_values_with_custom_elements(
+        self,
+        suppression_mock,
+        tags_mock,
+    ):
+        input_message = {
+            "severity": "Low",
+            "notification_type": "Information",
+            "slack_username": "Test Alert",
+            "active_days": "Monday",
+            "do_not_alert_before": "0700",
+            "do_not_alert_after": "1900",
+            "icon_override": aws_icon,
+            "slack_channel_override": "test-slack-channel-override",
+            "log_with_here": "true",
+            "title_text": "Test Title Text",
+            "custom_elements": [
+                {"key": "element_name_1", "value": "element_value_1"},
+                {"key": "element_name_2", "value": "element_value_2"},
+            ],
+        }
+
+        expected_custom_elements = [
+            {
+                "type": "mrkdwn",
+                "text": f"*element_name_1*: element_value_1",
+            },
+            {
+                "type": "mrkdwn",
+                "text": f"*element_name_2*: element_value_2",
+            },
+        ]
+
+        custom_alarm_notification_returns_right_values(
+            self,
+            suppression_mock,
+            input_message,
+            "Low",
+            "Information",
+            "Monday",
+            "0700",
+            "1900",
+            aws_icon,
+            "test-slack-channel-override",
+            "Test Title Text",
+            "Test Alert",
+            True,
+        )
+
 
 def custom_cloudwatch_alarm_notification_returns_right_values(
     self,
@@ -1430,6 +1485,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     expected_icon,
     expected_slack_channel,
     expected_here_tag=False,
+    expected_custom_elements=None,
 ):
     self.maxDiff = None
 
@@ -1460,6 +1516,40 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     if expected_here_tag:
         expected_title = '@here *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
 
+    expected_elements = [
+        {
+            "type": "mrkdwn",
+            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{severity_field_title}*: {expected_severity}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{type_field_title}*: {expected_type}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{active_days_field_title}*: {expected_active_days}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{skip_before_field_title}*: {expected_skip_before}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{skip_after_field_title}*: {expected_skip_after}",
+        },
+    ]
+
+    if expected_custom_elements is not None and len(expected_custom_elements) > 0:
+        expected_elements.extend(expected_custom_elements)
+
     expected_payload = {
         "username": f"AWS DataWorks Service Alerts - {aws_environment}",
         "icon_emoji": expected_icon,
@@ -1474,36 +1564,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
             },
             {
                 "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{severity_field_title}*: {expected_severity}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{type_field_title}*: {expected_type}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{active_days_field_title}*: {expected_active_days}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{skip_before_field_title}*: {expected_skip_before}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{skip_after_field_title}*: {expected_skip_after}",
-                    },
-                ],
+                "elements": expected_elements,
             },
         ],
     }
