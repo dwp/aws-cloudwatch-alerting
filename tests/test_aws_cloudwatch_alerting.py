@@ -1468,6 +1468,7 @@ class TestRetriever(unittest.TestCase):
             "Test Title Text",
             "Test Alert",
             True,
+            expected_custom_elements,
         )
 
 
@@ -1485,7 +1486,6 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     expected_icon,
     expected_slack_channel,
     expected_here_tag=False,
-    expected_custom_elements=None,
 ):
     self.maxDiff = None
 
@@ -1547,9 +1547,6 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         },
     ]
 
-    if expected_custom_elements is not None and len(expected_custom_elements) > 0:
-        expected_elements.extend(expected_custom_elements)
-
     expected_payload = {
         "username": f"AWS DataWorks Service Alerts - {aws_environment}",
         "icon_emoji": expected_icon,
@@ -1586,6 +1583,7 @@ def custom_alarm_notification_returns_right_values(
     expected_title_text,
     expected_username,
     expected_here_tag=False,
+    expected_custom_elements=None,
 ):
     self.maxDiff = None
 
@@ -1602,6 +1600,32 @@ def custom_alarm_notification_returns_right_values(
             f'@here *TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
         )
 
+    expected_elements = [
+        {
+            "type": "mrkdwn",
+            "text": f"*{severity_field_title}*: {expected_severity}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{type_field_title}*: {expected_type}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{active_days_field_title}*: {expected_active_days}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{skip_before_field_title}*: {expected_skip_before}",
+        },
+        {
+            "type": "mrkdwn",
+            "text": f"*{skip_after_field_title}*: {expected_skip_after}",
+        },
+    ]
+
+    if expected_custom_elements is not None and len(expected_custom_elements) > 0:
+        expected_elements.extend(expected_custom_elements)
+
     expected_payload = {
         "username": expected_username,
         "icon_emoji": expected_icon,
@@ -1616,28 +1640,7 @@ def custom_alarm_notification_returns_right_values(
             },
             {
                 "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{severity_field_title}*: {expected_severity}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{type_field_title}*: {expected_type}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{active_days_field_title}*: {expected_active_days}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{skip_before_field_title}*: {expected_skip_before}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*{skip_after_field_title}*: {expected_skip_after}",
-                    },
-                ],
+                "elements": expected_elements,
             },
         ],
     }

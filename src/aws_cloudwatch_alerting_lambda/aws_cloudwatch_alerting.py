@@ -1004,10 +1004,10 @@ def custom_notification(message, region, payload):
     ]
 
     if "custom_elements" in message:
-        for custom_element in message:
+        for custom_element in message["custom_elements"]:
             if "key" in custom_element and "value" in custom_element:
                 key = custom_element["key"]
-                key = custom_element["value"]
+                value = custom_element["value"]
                 elements.append({"type": "mrkdwn", "text": f"*{key}*: {value}"})
 
     blocks.append(
