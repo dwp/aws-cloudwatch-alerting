@@ -1339,9 +1339,7 @@ class TestRetriever(unittest.TestCase):
         ]
 
         expected_result = False
-        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(
-            tags, today, now
-        )
+        actual_result = aws_cloudwatch_alerting.is_alarm_suppressed(tags, today, now)
 
         self.assertEqual(expected_result, actual_result)
 
