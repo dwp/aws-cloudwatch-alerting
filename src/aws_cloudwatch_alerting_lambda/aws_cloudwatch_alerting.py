@@ -446,7 +446,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
-    
+
     slack_channel_notifications = (
         os.environ["AWS_SLACK_CHANNEL_NOTIFICATIONS"]
         if "AWS_SLACK_CHANNEL_NOTIFICATIONS" in os.environ
@@ -461,10 +461,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     logger.info(
-        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", ' +
-        f'"slack_channel_critical": "{slack_channel_critical}", ' +
-        f'"slack_channel_notifications": "{slack_channel_notifications}", ' +
-        f'"log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", '
+        + f'"slack_channel_critical": "{slack_channel_critical}", '
+        + f'"slack_channel_notifications": "{slack_channel_notifications}", '
+        + f'"log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
     )
 
     alarm_name = message["AlarmName"]
@@ -918,7 +918,7 @@ def custom_notification(message, region, payload):
     environment_name = os.environ["AWS_ENVIRONMENT"]
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
-    
+
     slack_channel_notifications = (
         os.environ["AWS_SLACK_CHANNEL_NOTIFICATIONS"]
         if "AWS_SLACK_CHANNEL_NOTIFICATIONS" in os.environ
@@ -926,10 +926,10 @@ def custom_notification(message, region, payload):
     )
 
     logger.info(
-        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", ' +
-        f'"slack_channel_critical": "{slack_channel_critical}", ' +
-        f'"slack_channel_notifications": "{slack_channel_notifications}", ' +
-        f'"correlation_id": "{correlation_id}'
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", '
+        + f'"slack_channel_critical": "{slack_channel_critical}", '
+        + f'"slack_channel_notifications": "{slack_channel_notifications}", '
+        + f'"correlation_id": "{correlation_id}'
     )
 
     active_days = message["active_days"] if "active_days" in message else "NOT_SET"
@@ -1024,7 +1024,9 @@ def custom_notification(message, region, payload):
     ]
     elements = []
     for (custom_type_name, custom_type_value) in custom_types:
-        elements.append({"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"})
+        elements.append(
+            {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
+        )
 
     if "custom_elements" in message:
         for custom_element in message["custom_elements"]:
@@ -1034,9 +1036,11 @@ def custom_notification(message, region, payload):
                 if len(elements) < 10:
                     elements.append({"type": "mrkdwn", "text": f"*{key}*: {value}"})
             else:
-                logger.warn(f'Ignored custom element as max amount of 10 reached", "title": "{title}", ' +
-                f'"key": "{key}", "value": "{value}", "custom_element_count": "{len(elements)}", ' +
-                f'"correlation_id": "{correlation_id}')
+                logger.warn(
+                    f'Ignored custom element as max amount of 10 reached", "title": "{title}", '
+                    + f'"key": "{key}", "value": "{value}", "custom_element_count": "{len(elements)}", '
+                    + f'"correlation_id": "{correlation_id}'
+                )
 
     blocks.append(
         {
