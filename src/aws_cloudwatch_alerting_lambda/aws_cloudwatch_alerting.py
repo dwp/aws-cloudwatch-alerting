@@ -446,6 +446,13 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
+    
+    slack_channel_notifications = (
+        os.environ["AWS_SLACK_CHANNEL_NOTIFICATIONS"]
+        if "AWS_SLACK_CHANNEL_NOTIFICATIONS" in os.environ
+        else slack_channel_main
+    )
+
     environment_name = os.environ["AWS_ENVIRONMENT"]
     log_critical_with_here = (
         os.environ["AWS_LOG_CRITICAL_WITH_HERE"]
@@ -454,7 +461,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     )
 
     logger.info(
-        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", "slack_channel_critical": "{slack_channel_critical}", "slack_channel_main": "{slack_channel_main}", "log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", ' +
+        f'"slack_channel_critical": "{slack_channel_critical}", ' +
+        f'"slack_channel_notifications": "{slack_channel_notifications}", ' +
+        f'"log_critical_with_here": "{log_critical_with_here}", "correlation_id": "{correlation_id}'
     )
 
     alarm_name = message["AlarmName"]
@@ -515,6 +525,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     if notification_type.lower() == "information":
         icon = information_source_icon
+        slack_channel = slack_channel_notifications
     elif notification_type.lower() == "error":
         icon = ":fire:"
         if severity.lower() == "high" or severity.lower() == "critical":
@@ -907,6 +918,19 @@ def custom_notification(message, region, payload):
     environment_name = os.environ["AWS_ENVIRONMENT"]
     slack_channel_main = os.environ["AWS_SLACK_CHANNEL_MAIN"]
     slack_channel_critical = os.environ["AWS_SLACK_CHANNEL_CRITICAL"]
+    
+    slack_channel_notifications = (
+        os.environ["AWS_SLACK_CHANNEL_NOTIFICATIONS"]
+        if "AWS_SLACK_CHANNEL_NOTIFICATIONS" in os.environ
+        else slack_channel_main
+    )
+
+    logger.info(
+        f'Retrieved aws event variables", "slack_channel_main": "{slack_channel_main}", ' +
+        f'"slack_channel_critical": "{slack_channel_critical}", ' +
+        f'"slack_channel_notifications": "{slack_channel_notifications}", ' +
+        f'"correlation_id": "{correlation_id}'
+    )
 
     active_days = message["active_days"] if "active_days" in message else "NOT_SET"
     do_not_alert_before = (
@@ -946,6 +970,8 @@ def custom_notification(message, region, payload):
     icon = ":warning:"
     here = ""
     slack_channel = slack_channel_main
+    if not slack_channel_notifications:
+        slack_channel_notifications = slack_channel_main
 
     if icon_override != "NOT_SET":
         icon = icon_override
@@ -959,8 +985,8 @@ def custom_notification(message, region, payload):
     elif notification_type.lower() == "error":
         if severity.lower() == "high" or severity.lower() == "critical":
             slack_channel = slack_channel_critical
-    elif notification_type.lower() != "information" and severity.lower() == "critical":
-        slack_channel = slack_channel_critical
+    elif notification_type.lower() != "information":
+        slack_channel = slack_channel_notifications
 
     trigger_time = datetime.now().strftime(date_format_display)
 
@@ -989,26 +1015,28 @@ def custom_notification(message, region, payload):
     payload["username"] = slack_username
     payload["icon_emoji"] = icon
 
-    elements = [
-        {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
-        {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
-        {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
-        {
-            "type": "mrkdwn",
-            "text": f"*Suppress before*: {do_not_alert_before}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*Suppress after*: {do_not_alert_after}",
-        },
+    custom_types = [
+        ("Severity", severity),
+        ("Type", notification_type),
+        ("Active days", active_days),
+        ("Suppress before", do_not_alert_before),
+        ("Suppress after", do_not_alert_after),
     ]
+    elements = []
+    for (custom_type_name, custom_type_value) in custom_types:
+        elements.append({"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"})
 
     if "custom_elements" in message:
         for custom_element in message["custom_elements"]:
             if "key" in custom_element and "value" in custom_element:
                 key = custom_element["key"]
                 value = custom_element["value"]
-                elements.append({"type": "mrkdwn", "text": f"*{key}*: {value}"})
+                if len(elements) < 10:
+                    elements.append({"type": "mrkdwn", "text": f"*{key}*: {value}"})
+            else:
+                logger.warn(f'Ignored custom element as max amount of 10 reached", "title": "{title}", ' +
+                f'"key": "{key}", "value": "{value}", "custom_element_count": "{len(elements)}", ' +
+                f'"correlation_id": "{correlation_id}')
 
     blocks.append(
         {
@@ -1023,87 +1051,57 @@ def custom_notification(message, region, payload):
 
 # Send a message to a slack channel
 def notify_slack(message, region):
+    logger.info(f'Processing aws event", "correlation_id": "{correlation_id}')
 
-    if "slack" in message:
-        # this is some info from one of our apps, intended for an app-specific slack channel...
+    slack_url = os.environ["STATUS_SLACK_WEBHOOK_URL"]
 
-        logger.info(f'Processing app event", "correlation_id": "{correlation_id}')
+    if not slack_url.startswith("http"):
+        slack_url = decrypt(slack_url)
 
-        slack_url = os.environ["APP_INFO_SLACK_WEBHOOK_URL"]
-        if not slack_url.startswith("http"):
-            slack_url = decrypt(slack_url)
+    slack_channel = os.environ["STATUS_SLACK_CHANNEL"]
+    slack_username = os.environ["STATUS_SLACK_USERNAME"]
 
-        slack_channel = os.environ["APP_INFO_SLACK_CHANNEL"]
-        slack_username = os.environ["APP_INFO_SLACK_USERNAME"]
+    payload = {
+        "channel": slack_channel,
+        "username": slack_username,
+        "icon_emoji": os.environ["STATUS_SLACK_ICON_EMOJI"]
+        if "STATUS_SLACK_ICON_EMOJI" in os.environ
+        else ":aws:",
+    }
 
-        payload = {
-            "channel": slack_channel,
-            "username": slack_username,
-            "icon_emoji": os.environ["APP_INFO_SLACK_ICON_EMOJI"]
-            if "APP_INFO_SLACK_ICON_EMOJI" in os.environ
-            else ":aws:",
-        }
+    dumped_payload = get_escaped_json_string(payload)
+    logger.info(
+        f'Created initial slack payload", "payload": "{dumped_payload}", "slack_url": "{slack_url}", "slack_channel": "{slack_channel}", "slack_username": "{slack_username}", "correlation_id": "{correlation_id}'
+    )
 
-        dumped_payload = get_escaped_json_string(payload)
-        logger.info(
-            f'Created initial app slack payload", "payload": "{dumped_payload}", "app_slack_url": "{slack_url}", "app_slack_channel": "{slack_channel}", "app_slack_username": "{slack_username}", "correlation_id": "{correlation_id}'
-        )
-
-        payload = app_notification(message, region, payload)
-    else:
-        # this is a status update from AWS...
-
-        logger.info(f'Processing aws event", "correlation_id": "{correlation_id}')
-
-        slack_url = os.environ["STATUS_SLACK_WEBHOOK_URL"]
-
-        if not slack_url.startswith("http"):
-            slack_url = decrypt(slack_url)
-
-        slack_channel = os.environ["STATUS_SLACK_CHANNEL"]
-        slack_username = os.environ["STATUS_SLACK_USERNAME"]
-
-        payload = {
-            "channel": slack_channel,
-            "username": slack_username,
-            "icon_emoji": os.environ["STATUS_SLACK_ICON_EMOJI"]
-            if "STATUS_SLACK_ICON_EMOJI" in os.environ
-            else ":aws:",
-        }
-
-        dumped_payload = get_escaped_json_string(payload)
-        logger.info(
-            f'Created initial slack payload", "payload": "{dumped_payload}", "slack_url": "{slack_url}", "slack_channel": "{slack_channel}", "slack_username": "{slack_username}", "correlation_id": "{correlation_id}'
-        )
-
-        if "detail-type" in message and message["detail-type"] == "GuardDuty Finding":
-            payload = guardduty_notification(message, region, payload)
-        elif "configRuleName" in message:
-            # this is a compliance/non-compliance AWS Config message...
-            payload = config_notification(message, region, payload)
-        elif (
-            "messageType" in message
-            and message["messageType"] == "ConfigurationItemChangeNotification"
-        ):
-            # this is an AWS Config CloudWatch Event, specifically a config item change notification
-            # that unfortunately has to be triggered on any resource type for which we have defined an AWS Config compliance
-            # rule (see aws_config_setup.tf, wherein we define this set of resource types as a "recording_group" in the
-            # "aws_config_delivery_channel"); we see these far too frequently to be worth alerting on - ignore...
-            quit()
-        elif "messageType" in message:
-            # assume this is another type of AWS Config CloudWatch Event that we do not see so frequently...
-            payload = config_cloudwatch_event_notification(message, region, payload)
-        elif "AlarmName" in message:
-            if os.environ["USE_AWS_SLACK_CHANNELS"].lower() == "true":
-                payload = config_cloudwatch_alarm_notification(
-                    message, region, os.environ["AWS_SLACK_CHANNEL_PROWLER"], payload
-                )
-            else:
-                payload = config_prowler_cloudwatch_alarm_notification(
-                    message, region, payload
-                )
+    if "detail-type" in message and message["detail-type"] == "GuardDuty Finding":
+        payload = guardduty_notification(message, region, payload)
+    elif "configRuleName" in message:
+        # this is a compliance/non-compliance AWS Config message...
+        payload = config_notification(message, region, payload)
+    elif (
+        "messageType" in message
+        and message["messageType"] == "ConfigurationItemChangeNotification"
+    ):
+        # this is an AWS Config CloudWatch Event, specifically a config item change notification
+        # that unfortunately has to be triggered on any resource type for which we have defined an AWS Config compliance
+        # rule (see aws_config_setup.tf, wherein we define this set of resource types as a "recording_group" in the
+        # "aws_config_delivery_channel"); we see these far too frequently to be worth alerting on - ignore...
+        quit()
+    elif "messageType" in message:
+        # assume this is another type of AWS Config CloudWatch Event that we do not see so frequently...
+        payload = config_cloudwatch_event_notification(message, region, payload)
+    elif "AlarmName" in message:
+        if os.environ["USE_AWS_SLACK_CHANNELS"].lower() == "true":
+            payload = config_cloudwatch_alarm_notification(
+                message, region, os.environ["AWS_SLACK_CHANNEL_PROWLER"], payload
+            )
         else:
-            payload = custom_notification(message, region, payload)
+            payload = config_prowler_cloudwatch_alarm_notification(
+                message, region, payload
+            )
+    else:
+        payload = custom_notification(message, region, payload)
 
     if "blocks" in payload:
         payload["blocks"].insert(0, {"type": "divider"})
@@ -1135,16 +1133,6 @@ def get_escaped_json_string(json_dict):
 
 
 def lambda_handler(event, context):
-    # print(event)
-
-    # note that, when calling the lambda function via the console 'test' button,
-    # in order for the 'message' to not already be a 'dict', thus causing the 'loads' (str to dict) below to fail with error message
-    # "the JSON object must be str, bytes or bytearray, not 'dict'", the double quotes in a message have to be escaped
-    # & the message itself then placed within unescaped double quotes in the 'Amazon SNS Topic Notification' event template, ie:
-    #         "Message": "example message",
-    # becomes:
-    #         "Message": "{\"AlarmName\": \"3.1 Unauthorized API calls\", ...
-
     dumped_event = get_escaped_json_string(event)
     logger.info(
         f'Processing event", "aws_event": {dumped_event}, "correlation_id": "{correlation_id}'
