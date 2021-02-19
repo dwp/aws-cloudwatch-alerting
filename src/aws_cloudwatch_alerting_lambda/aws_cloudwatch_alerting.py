@@ -618,7 +618,10 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         for (custom_type_name, custom_type_value) in custom_types:
             if custom_type_value != "NOT_SET":
                 elements.append(
-                    {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*{custom_type_name}*: {custom_type_value}",
+                    }
                 )
 
         blocks.append(
