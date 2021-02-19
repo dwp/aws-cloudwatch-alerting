@@ -603,27 +603,27 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     else:
         payload["username"] = f"AWS DataWorks Service Alerts - {environment_name}"
         payload["icon_emoji"] = icon
+
+        custom_types = [
+            ("AWS Console link", f"<{alarm_url}|Click here>"),
+            ("Trigger time", trigger_time),
+            ("Severity", severity),
+            ("Type", notification_type),
+            ("Active days", active_days),
+            ("Suppress before", do_not_alert_before),
+            ("Suppress after", do_not_alert_after),
+        ]
+        elements = []
+        for (custom_type_name, custom_type_value) in custom_types:
+            if custom_type_value != "NOT_SET":
+                elements.append(
+                    {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
+                )
+
         blocks.append(
             {
                 "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*AWS Console link*: <{alarm_url}|Click here>",
-                    },
-                    {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
-                    {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
-                    {"type": "mrkdwn", "text": f"*Type*: {notification_type}"},
-                    {"type": "mrkdwn", "text": f"*Active days*: {active_days}"},
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Suppress before*: {do_not_alert_before}",
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Suppress after*: {do_not_alert_after}",
-                    },
-                ],
+                "elements": elements,
             }
         )
 
@@ -770,6 +770,20 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
 
     payload["username"] = f"AWS DataWorks Security Alerts - {environment_name}"
     payload["icon_emoji"] = icon
+
+    custom_types = [
+        ("AWS Console link", f"<{cloudwatch_log_url}|Click here>"),
+        ("Trigger time", trigger_time),
+        ("Severity", severity),
+        ("Type", "Security notification"),
+    ]
+    elements = []
+    for (custom_type_name, custom_type_value) in custom_types:
+        if custom_type_value != "NOT_SET":
+            elements.append(
+                {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
+            )
+
     payload["blocks"] = [
         {
             "type": "section",
@@ -780,15 +794,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         },
         {
             "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*AWS Console link*: <{cloudwatch_log_url}|Click here>",
-                },
-                {"type": "mrkdwn", "text": f"*Trigger time*: {trigger_time}"},
-                {"type": "mrkdwn", "text": f"*Severity*: {severity}"},
-                {"type": "mrkdwn", "text": f"*Type*: Security notification"},
-            ],
+            "elements": elements,
         },
     ]
     return payload
@@ -835,59 +841,6 @@ def guardduty_notification(message, region, payload):
                     + "].\nFor full details check the AWS Console ["
                     + gd_url
                     + "].",
-                }
-            ],
-        },
-    ]
-    return payload
-
-
-def app_notification(slack_message, region, payload):
-    dumped_slack_message = get_escaped_json_string(slack_message)
-    logger.info(
-        f'Processing app notification", "slack_message": "{dumped_slack_message}", "correlation_id": "{correlation_id}'
-    )
-
-    recognised_apps = {
-        "Security": "",
-        "Payment": "",
-        "Pipeline": "",
-        "TransferToPensionAge": "",
-        "MI12CaseControl": "",
-        "QLR": "",
-        "ReleaseComparison": "",
-    }
-
-    message = slack_message["slack"]
-    app = message["application"]
-
-    if app not in recognised_apps:
-        quit()
-
-    app_function = message["function"]
-    app_function_message_type = message["messageType"]
-    app_function_message = message["message"]
-    title = "[" + app + "] application notification."
-
-    dumped_app_function_message = get_escaped_json_string(app_function_message)
-    logger.info(
-        f'Created app notification", "app_function_message": "{dumped_app_function_message}", "correlation_id": "{correlation_id}'
-    )
-
-    payload["blocks"] = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": title,
-            },
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*{app_function} {app_function_message_type}*: {app_function_message}",
                 }
             ],
         },
@@ -970,6 +923,8 @@ def custom_notification(message, region, payload):
     icon = ":warning:"
     here = ""
     slack_channel = slack_channel_main
+    if not slack_channel_notifications:
+        slack_channel_notifications = slack_channel_main
 
     if icon_override != "NOT_SET":
         icon = icon_override
