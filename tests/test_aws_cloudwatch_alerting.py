@@ -731,23 +731,6 @@ class TestRetriever(unittest.TestCase):
                             "type": "mrkdwn",
                             "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET",
-                        },
-                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{active_days_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_before_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_after_field_title}*: NOT_SET",
-                        },
                     ],
                 },
             ],
@@ -813,23 +796,6 @@ class TestRetriever(unittest.TestCase):
                             "type": "mrkdwn",
                             "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
                         },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET",
-                        },
-                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{active_days_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_before_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_after_field_title}*: NOT_SET",
-                        },
                     ],
                 },
             ],
@@ -894,23 +860,6 @@ class TestRetriever(unittest.TestCase):
                         {
                             "type": "mrkdwn",
                             "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{severity_field_title}*: NOT_SET",
-                        },
-                        {"type": "mrkdwn", "text": f"*{type_field_title}*: NOT_SET"},
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{active_days_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_before_field_title}*: NOT_SET",
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": f"*{skip_after_field_title}*: NOT_SET",
                         },
                     ],
                 },
@@ -1601,36 +1550,21 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     if expected_here_tag:
         expected_title = '@here *TEST_ENVIRONMENT*: "_test_alarm name_" in eu-test-2'
 
-    expected_elements = [
-        {
-            "type": "mrkdwn",
-            "text": f"*{attachment_title_link_field}*: <{expected_cloudwatch_url}|Click here>",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{trigger_time_field_title}*: {state_updated_output_string}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{severity_field_title}*: {expected_severity}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{type_field_title}*: {expected_type}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{active_days_field_title}*: {expected_active_days}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{skip_before_field_title}*: {expected_skip_before}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{skip_after_field_title}*: {expected_skip_after}",
-        },
+    expected_elements = []
+    expected_types = [
+        (attachment_title_link_field, f"<{expected_cloudwatch_url}|Click here>"),
+        (trigger_time_field_title, state_updated_output_string),
+        (severity_field_title, expected_severity),
+        (type_field_title, expected_type),
+        (active_days_field_title, expected_active_days),
+        (skip_before_field_title, expected_skip_before),
+        (skip_after_field_title, expected_skip_after),
     ]
+    for (expected_type_name, expected_type_value) in expected_types:
+        if expected_type_value != "NOT_SET":
+            expected_elements.append(
+                {"type": "mrkdwn", "text": f"*{expected_type_name}*: {expected_type_value}"}
+            )
 
     expected_payload = {
         "username": f"AWS DataWorks Service Alerts - {aws_environment}",
@@ -1685,28 +1619,19 @@ def custom_alarm_notification_returns_right_values(
             f'@here *TEST_ENVIRONMENT*: "_{expected_title_text}_" in eu-test-2'
         )
 
-    expected_elements = [
-        {
-            "type": "mrkdwn",
-            "text": f"*{severity_field_title}*: {expected_severity}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{type_field_title}*: {expected_type}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{active_days_field_title}*: {expected_active_days}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{skip_before_field_title}*: {expected_skip_before}",
-        },
-        {
-            "type": "mrkdwn",
-            "text": f"*{skip_after_field_title}*: {expected_skip_after}",
-        },
+    expected_elements = []
+    expected_types = [
+        (severity_field_title, expected_severity),
+        (type_field_title, expected_type),
+        (active_days_field_title, expected_active_days),
+        (skip_before_field_title, expected_skip_before),
+        (skip_after_field_title, expected_skip_after),
     ]
+    for (expected_type_name, expected_type_value) in expected_types:
+        if expected_type_value != "NOT_SET":
+            expected_elements.append(
+                {"type": "mrkdwn", "text": f"*{expected_type_name}*: {expected_type_value}"}
+            )
 
     if expected_custom_elements is not None and len(expected_custom_elements) > 0:
         expected_elements.extend(expected_custom_elements)
