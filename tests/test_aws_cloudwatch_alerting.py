@@ -1563,7 +1563,10 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
     for (expected_type_name, expected_type_value) in expected_types:
         if expected_type_value != "NOT_SET":
             expected_elements.append(
-                {"type": "mrkdwn", "text": f"*{expected_type_name}*: {expected_type_value}"}
+                {
+                    "type": "mrkdwn",
+                    "text": f"*{expected_type_name}*: {expected_type_value}",
+                }
             )
 
     expected_payload = {
@@ -1630,7 +1633,10 @@ def custom_alarm_notification_returns_right_values(
     for (expected_type_name, expected_type_value) in expected_types:
         if expected_type_value != "NOT_SET":
             expected_elements.append(
-                {"type": "mrkdwn", "text": f"*{expected_type_name}*: {expected_type_value}"}
+                {
+                    "type": "mrkdwn",
+                    "text": f"*{expected_type_name}*: {expected_type_value}",
+                }
             )
 
     if expected_custom_elements is not None and len(expected_custom_elements) > 0:
