@@ -542,7 +542,8 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     title = f'{here}*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    logger.info(f'Set title", "title": "{title.replace("\"", "\\\"")}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace("\"", "\\\"")
+    logger.info(f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}')
 
     trigger_time = (
         datetime.strptime(message["StateChangeTime"], date_format).strftime(
@@ -701,7 +702,8 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     alarm_name = message["AlarmName"]
     title = f'*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    logger.info(f'Set title", "title": "{title.replace("\"", "\\\"")}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace("\"", "\\\"")
+    logger.info(f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}')
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
@@ -953,7 +955,8 @@ def custom_notification(message, region, payload):
         here = "@here "
 
     title = f'{here}*{environment_name.upper()}*: "_{title_text}_" in {region}'
-    logger.info(f'Set title", "title": "{title.replace("\"", "\\\"")}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace("\"", "\\\"")
+    logger.info(f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}')
 
     payload["channel"] = slack_channel
     blocks = []
