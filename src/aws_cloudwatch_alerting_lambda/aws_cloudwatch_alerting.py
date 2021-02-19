@@ -17,6 +17,7 @@ date_format_display = "%Y-%m-%dT%H:%M:%S"
 log_level = os.environ["LOG_LEVEL"] if "LOG_LEVEL" in os.environ else "INFO"
 correlation_id = str(uuid.uuid4())
 information_source_icon = ":information_source:"
+unset_text = "NOT_SET"
 
 
 # Initialise logging
@@ -59,8 +60,8 @@ def get_parameters():
     # Parse command line inputs and set defaults
     parser.add_argument("--aws-profile", default="default")
     parser.add_argument("--aws-region", default="eu-west-2")
-    parser.add_argument("--environment", default="NOT_SET", help="Environment value")
-    parser.add_argument("--application", default="NOT_SET", help="Application")
+    parser.add_argument("--environment", default=unset_text, help="Environment value")
+    parser.add_argument("--application", default=unset_text, help="Application")
 
     _args = parser.parse_args()
 
@@ -367,7 +368,7 @@ def is_alarm_suppressed(tags, today, now):
 
     active_days = next(
         (tag["Value"] for tag in tags if tag["Key"] == "active_days" and tag["Value"]),
-        "NOT_SET",
+        unset_text,
     )
     do_not_alert_before = next(
         (
@@ -375,7 +376,7 @@ def is_alarm_suppressed(tags, today, now):
             for tag in tags
             if tag["Key"] == "do_not_alert_before" and tag["Value"]
         ),
-        "NOT_SET",
+        unset_text,
     )
     do_not_alert_after = next(
         (
@@ -383,7 +384,7 @@ def is_alarm_suppressed(tags, today, now):
             for tag in tags
             if tag["Key"] == "do_not_alert_after" and tag["Value"]
         ),
-        "NOT_SET",
+        unset_text,
     )
 
     logger.info(
@@ -397,7 +398,7 @@ def is_alarm_suppressed(tags, today, now):
         f'Parsed current date and time", "date_today": "{date_today}", "time_now": "{time_now}", "correlation_id": "{correlation_id}'
     )
 
-    if active_days and active_days != "NOT_SET":
+    if active_days and active_days != unset_text:
         days_array = active_days.lower().split("+")
         if date_today not in days_array:
             logger.info(
@@ -405,14 +406,14 @@ def is_alarm_suppressed(tags, today, now):
             )
             return True
 
-    if do_not_alert_before and do_not_alert_before != "NOT_SET":
+    if do_not_alert_before and do_not_alert_before != unset_text:
         if int(time_now) < int(do_not_alert_before.replace(":", "")):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_before", "time_now": "{time_now}", "do_not_alert_before": "{do_not_alert_before}", "correlation_id": "{correlation_id}'
             )
             return True
 
-    if do_not_alert_after and do_not_alert_after != "NOT_SET":
+    if do_not_alert_after and do_not_alert_after != unset_text:
         if int(time_now) > int(do_not_alert_after.replace(":", "")):
             logger.info(
                 f'Alarm notification supressed due to do_not_alert_after", "time_now": "{time_now}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
@@ -457,7 +458,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
     log_critical_with_here = (
         os.environ["AWS_LOG_CRITICAL_WITH_HERE"]
         if "AWS_LOG_CRITICAL_WITH_HERE" in os.environ
-        else "NOT_SET"
+        else unset_text
     )
 
     logger.info(
@@ -480,7 +481,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     severity = next(
         (tag["Value"] for tag in tags if tag["Key"] == "severity" and tag["Value"]),
-        "NOT_SET",
+        unset_text,
     )
     notification_type = next(
         (
@@ -488,11 +489,11 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             for tag in tags
             if tag["Key"] == "notification_type" and tag["Value"]
         ),
-        "NOT_SET",
+        unset_text,
     )
     active_days = next(
         (tag["Value"] for tag in tags if tag["Key"] == "active_days" and tag["Value"]),
-        "NOT_SET",
+        unset_text,
     )
     do_not_alert_before = next(
         (
@@ -500,7 +501,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             for tag in tags
             if tag["Key"] == "do_not_alert_before" and tag["Value"]
         ),
-        "NOT_SET",
+        unset_text,
     )
     do_not_alert_after = next(
         (
@@ -508,7 +509,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             for tag in tags
             if tag["Key"] == "do_not_alert_after" and tag["Value"]
         ),
-        "NOT_SET",
+        unset_text,
     )
 
     alarm_url = (
@@ -542,14 +543,17 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
 
     title = f'{here}*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace('"', '\\"')
+    logger.info(
+        f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}'
+    )
 
     trigger_time = (
         datetime.strptime(message["StateChangeTime"], date_format).strftime(
             date_format_display
         )
         if "StateChangeTime" in message
-        else "NOT_SET"
+        else unset_text
     )
 
     logger.info(
@@ -615,7 +619,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
         ]
         elements = []
         for (custom_type_name, custom_type_value) in custom_types:
-            if custom_type_value != "NOT_SET":
+            if custom_type_value.lower() != unset_text.lower():
                 elements.append(
                     {
                         "type": "mrkdwn",
@@ -704,7 +708,10 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     alarm_name = message["AlarmName"]
     title = f'*{environment_name.upper()}*: "_{alarm_name}_" in {region}'
 
-    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace('"', '\\"')
+    logger.info(
+        f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}'
+    )
 
     # providing a link back to the alarm is not of much use...
     alarm_url = (
@@ -729,14 +736,14 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
             date_format_display
         )
         if "StateChangeTime" in message
-        else "NOT_SET"
+        else unset_text
     )
 
     aws_account_id = message["AWSAccountId"]
     cloudwatch_log_group = "cloudTrail"
     cloudwatch_log_stream = aws_account_id + "_CloudTrail_" + region
     cloudwatch_metric_filter = ""
-    severity = "NOT_SET"
+    severity = unset_text
     icon = ":question:"
 
     if alarm_name in cloudwatch_metric_filters:
@@ -782,7 +789,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
     ]
     elements = []
     for (custom_type_name, custom_type_value) in custom_types:
-        if custom_type_value != "NOT_SET":
+        if custom_type_value.lower() != unset_text.lower():
             elements.append(
                 {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
             )
@@ -888,14 +895,14 @@ def custom_notification(message, region, payload):
         + f'"correlation_id": "{correlation_id}'
     )
 
-    active_days = message["active_days"] if "active_days" in message else "NOT_SET"
+    active_days = message["active_days"] if "active_days" in message else unset_text
     do_not_alert_before = (
         message["do_not_alert_before"]
         if "do_not_alert_before" in message
-        else "NOT_SET"
+        else unset_text
     )
     do_not_alert_after = (
-        message["do_not_alert_after"] if "do_not_alert_after" in message else "NOT_SET"
+        message["do_not_alert_after"] if "do_not_alert_after" in message else unset_text
     )
     logger.info(
         f'Set slack message suppression overrides", "active_days": "{active_days}", "do_not_alert_before": "{do_not_alert_before}", "do_not_alert_after": "{do_not_alert_after}", "correlation_id": "{correlation_id}'
@@ -911,17 +918,17 @@ def custom_notification(message, region, payload):
         else f"AWS DataWorks Service Alerts - {environment_name}"
     )
     icon_override = (
-        message["icon_override"] if "icon_override" in message else "NOT_SET"
+        message["icon_override"] if "icon_override" in message else unset_text
     )
     slack_channel_override = (
         message["slack_channel_override"]
         if "slack_channel_override" in message
-        else "NOT_SET"
+        else unset_text
     )
     log_with_here = (
-        message["log_with_here"] if "log_with_here" in message else "NOT_SET"
+        message["log_with_here"] if "log_with_here" in message else unset_text
     )
-    title_text = message["title_text"] if "title_text" in message else "NOT_SET"
+    title_text = message["title_text"] if "title_text" in message else unset_text
 
     icon = ":warning:"
     here = ""
@@ -929,32 +936,37 @@ def custom_notification(message, region, payload):
     if not slack_channel_notifications:
         slack_channel_notifications = slack_channel_main
 
-    if icon_override != "NOT_SET":
+    if icon_override != unset_text:
         icon = icon_override
     elif notification_type.lower() == "information":
         icon = information_source_icon
     elif notification_type.lower() == "error":
         icon = ":fire:"
 
-    if slack_channel_override != "NOT_SET":
+    if slack_channel_override != unset_text:
         slack_channel = slack_channel_override
     elif notification_type.lower() == "error":
         if severity.lower() == "high" or severity.lower() == "critical":
             slack_channel = slack_channel_critical
-    elif notification_type.lower() != "information":
+    elif notification_type.lower() == "information":
         slack_channel = slack_channel_notifications
 
     trigger_time = datetime.now().strftime(date_format_display)
 
     logger.info(
-        f'Set slack message variables", "severity": "{severity}", "notification_type": "{notification_type}", "slack_username": "{slack_username}", "trigger_time": "{trigger_time}", "icon": "{icon}", "slack_channel": "{slack_channel}", "correlation_id": "{correlation_id}'
+        f'Set slack message variables", "severity": "{severity}", "notification_type": "{notification_type}", '
+        + f'"slack_username": "{slack_username}", "trigger_time": "{trigger_time}", "icon": "{icon}", '
+        + f'"slack_channel": "{slack_channel}", "correlation_id": "{correlation_id}'
     )
 
     if log_with_here.lower() == "true":
         here = "@here "
 
     title = f'{here}*{environment_name.upper()}*: "_{title_text}_" in {region}'
-    logger.info(f'Set title", "title": "{title}", "correlation_id": "{correlation_id}')
+    title_qualified = title.replace('"', '\\"')
+    logger.info(
+        f'Set title", "title": "{title_qualified}", "correlation_id": "{correlation_id}'
+    )
 
     payload["channel"] = slack_channel
     blocks = []
@@ -980,7 +992,7 @@ def custom_notification(message, region, payload):
     ]
     elements = []
     for (custom_type_name, custom_type_value) in custom_types:
-        if custom_type_value != "NOT_SET":
+        if custom_type_value.lower() != unset_text.lower():
             elements.append(
                 {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
             )
@@ -1070,7 +1082,8 @@ def notify_slack(message, region):
 
     dumped_payload = get_escaped_json_string(payload)
     logger.info(
-        f'Parsed final slack payload", "payload": "{dumped_payload}", "slack_url": "{slack_url}", "correlation_id": "{correlation_id}'
+        f'Parsed final slack payload", "payload": {dumped_payload}, "slack_url": "{slack_url}", '
+        + f'"correlation_id": "{correlation_id}'
     )
 
     data = urllib.parse.urlencode({"payload": json.dumps(payload)}).encode("utf-8")

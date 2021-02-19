@@ -44,6 +44,8 @@ icon_information_source = ":information_source:"
 icon_warning = ":warning:"
 icon_fire = ":fire:"
 
+unset_text = "NOT_SET"
+
 
 @pytest.fixture(autouse=True)
 def before():
@@ -323,9 +325,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "low",
             "information",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_information_source,
             slack_channel_main,
         )
@@ -349,9 +351,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "medium",
             "information",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_information_source,
             slack_channel_main,
         )
@@ -375,9 +377,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "high",
             "information",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_information_source,
             slack_channel_main,
         )
@@ -401,9 +403,9 @@ class TestRetriever(unittest.TestCase):
             "information",
             "critical",
             "information",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_information_source,
             slack_channel_main,
         )
@@ -427,9 +429,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "low",
             "warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
         )
@@ -453,9 +455,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "medium",
             "warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
         )
@@ -479,9 +481,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "high",
             "warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
         )
@@ -507,9 +509,9 @@ class TestRetriever(unittest.TestCase):
             "warning",
             "critical",
             "warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_critical,
         )
@@ -533,9 +535,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "low",
             "error",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_fire,
             slack_channel_main,
         )
@@ -559,9 +561,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "medium",
             "error",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_fire,
             slack_channel_main,
         )
@@ -587,9 +589,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "high",
             "error",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_fire,
             slack_channel_critical,
         )
@@ -615,9 +617,9 @@ class TestRetriever(unittest.TestCase):
             "error",
             "critical",
             "error",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_fire,
             slack_channel_critical,
             True,
@@ -640,11 +642,11 @@ class TestRetriever(unittest.TestCase):
             suppression_mock,
             None,
             None,
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
         )
@@ -668,9 +670,9 @@ class TestRetriever(unittest.TestCase):
             "test",
             "test",
             "test",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
         )
@@ -1369,12 +1371,12 @@ class TestRetriever(unittest.TestCase):
             input_message,
             "Medium",
             "Warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             icon_warning,
             slack_channel_main,
-            "NOT_SET",
+            unset_text,
             test_title,
         )
 
@@ -1400,12 +1402,12 @@ class TestRetriever(unittest.TestCase):
             input_message,
             "Medium",
             "Warning",
-            "NOT_SET",
-            "NOT_SET",
-            "NOT_SET",
+            unset_text,
+            unset_text,
+            unset_text,
             aws_icon,
             "test-slack-channel-override",
-            "NOT_SET",
+            unset_text,
             test_title,
         )
 
@@ -1561,7 +1563,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         (skip_after_field_title, expected_skip_after),
     ]
     for (expected_type_name, expected_type_value) in expected_types:
-        if expected_type_value != "NOT_SET":
+        if expected_type_value != unset_text:
             expected_elements.append(
                 {
                     "type": "mrkdwn",
@@ -1631,7 +1633,7 @@ def custom_alarm_notification_returns_right_values(
         (skip_after_field_title, expected_skip_after),
     ]
     for (expected_type_name, expected_type_value) in expected_types:
-        if expected_type_value != "NOT_SET":
+        if expected_type_value.lower() != unset_text.lower():
             expected_elements.append(
                 {
                     "type": "mrkdwn",
