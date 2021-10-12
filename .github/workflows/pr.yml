@@ -17,6 +17,12 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run unittest
+        run: tox
+
       - name: Install Black
         run: pip install black
 
