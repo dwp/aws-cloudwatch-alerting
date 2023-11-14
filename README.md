@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # aws-cloudwatch-alerting
 Lambda function to send CloudWatch alerts to Slack written in python 3.8
 

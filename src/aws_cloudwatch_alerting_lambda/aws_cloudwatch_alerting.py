@@ -618,7 +618,7 @@ def config_custom_cloudwatch_alarm_notification(message, region, payload):
             ("Suppress after", do_not_alert_after),
         ]
         elements = []
-        for (custom_type_name, custom_type_value) in custom_types:
+        for custom_type_name, custom_type_value in custom_types:
             if custom_type_value.lower() != unset_text.lower():
                 elements.append(
                     {
@@ -788,7 +788,7 @@ def config_prowler_cloudwatch_alarm_notification(message, region, payload):
         ("Type", "Security notification"),
     ]
     elements = []
-    for (custom_type_name, custom_type_value) in custom_types:
+    for custom_type_name, custom_type_value in custom_types:
         if custom_type_value.lower() != unset_text.lower():
             elements.append(
                 {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
@@ -991,7 +991,7 @@ def custom_notification(message, region, payload):
         ("Suppress after", do_not_alert_after),
     ]
     elements = []
-    for (custom_type_name, custom_type_value) in custom_types:
+    for custom_type_name, custom_type_value in custom_types:
         if custom_type_value.lower() != unset_text.lower():
             elements.append(
                 {"type": "mrkdwn", "text": f"*{custom_type_name}*: {custom_type_value}"}
