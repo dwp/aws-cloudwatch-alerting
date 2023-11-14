@@ -1562,7 +1562,7 @@ def custom_cloudwatch_alarm_notification_returns_right_values(
         (skip_before_field_title, expected_skip_before),
         (skip_after_field_title, expected_skip_after),
     ]
-    for (expected_type_name, expected_type_value) in expected_types:
+    for expected_type_name, expected_type_value in expected_types:
         if expected_type_value != unset_text:
             expected_elements.append(
                 {
@@ -1632,7 +1632,7 @@ def custom_alarm_notification_returns_right_values(
         (skip_before_field_title, expected_skip_before),
         (skip_after_field_title, expected_skip_after),
     ]
-    for (expected_type_name, expected_type_value) in expected_types:
+    for expected_type_name, expected_type_value in expected_types:
         if expected_type_value.lower() != unset_text.lower():
             expected_elements.append(
                 {
